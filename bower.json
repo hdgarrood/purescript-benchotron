@@ -1,0 +1,22 @@
+{
+  "name": "purescript-benchotron",
+  "moduleType": [
+    "node"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-arrays": "*",
+    "purescript-exists": "*",
+    "purescript-identity": "*",
+    "purescript-strings": "*",
+    "purescript-foldable-traversable": "*",
+    "purescript-exceptions": "*",
+    "purescript-node-fs": "*",
+    "purescript-node-buffer": "*"
+  }
+}
