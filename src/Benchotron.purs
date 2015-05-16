@@ -1,15 +1,16 @@
 
 module Benchotron
   ( Benchmark()
-  , BenchEffects()
-  , Stats()
-  , ResultSeries()
-  , Result()
   , runBenchmark
-  , Any()
-  , toAny
   , benchmarkToFile
   , benchmarkToStdout
+  , BenchEffects()
+  , BenchmarkResult()
+  , ResultSeries()
+  , DataPoint()
+  , Stats()
+  , Any()
+  , toAny
   ) where
 
 import Data.Exists
@@ -26,40 +27,15 @@ import Node.FS.Sync (writeTextFile)
 import Node.Encoding (Encoding(..))
 
 type Benchmark e a =
-  { name          :: String
-  , sizes         :: Array Number
-  , inputsPerSize :: Number
-  , gen           :: Number -> Eff (BenchEffects e) a
-  , functions     :: Array { name :: String, fn :: a -> Any }
+  { name               :: String
+  , sizes              :: Array Number
+  , sizeInterpretation :: String
+  , inputsPerSize      :: Number
+  , gen                :: Number -> Eff (BenchEffects e) a
+  , functions          :: Array { name                     :: String, fn :: a -> Any }
   }
 
-type BenchEffects e
-  = ( err :: Exception
-    , fs :: FS
-    | e
-    )
-
-type Stats =
-  { deviation :: Number
-  , mean      :: Number
-  , moe       :: Number
-  , rme       :: Number
-  , sample    :: Array Number
-  , sem       :: Number
-  , variance  :: Number
-  }
-
-type ResultSeries =
-  { name    :: String
-  , results :: Array Result
-  }
-
-type Result =
-  { size  :: Number
-  , stats :: Stats
-  }
-
-runBenchmark :: forall e a. Benchmark e a -> Eff (BenchEffects e) (Array ResultSeries)
+runBenchmark :: forall e a. Benchmark e a -> Eff (BenchEffects e) BenchmarkResult
 runBenchmark benchmark = do
   let countSizes = length benchmark.sizes
   results <- for (withIndices benchmark.sizes) $ \(Tuple idx size) -> do
@@ -80,10 +56,57 @@ runBenchmark benchmark = do
 
     return { size: size, allStats: allStats }
 
-  return $ rejig results
+  let series = rejig results
+  return
+    { name: benchmark.name
+    , sizeInterpretation: benchmark.sizeInterpretation
+    , series: series
+    }
 
   where
   withIndices arr = zip (1..(length arr)) arr
+
+benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) Unit
+benchmarkToFile bench path = do
+  results <- runBenchmark bench
+  writeTextFile UTF8 path $ jsonStringify results
+
+benchmarkToStdout :: forall e a. Benchmark e a -> Eff (BenchEffects e) Unit
+benchmarkToStdout bench = do
+  results <- runBenchmark bench
+  stdoutWrite $ jsonStringify results
+
+type BenchEffects e
+  = ( err :: Exception
+    , fs :: FS
+    | e
+    )
+
+type BenchmarkResult =
+  { name               :: String
+  , sizeInterpretation :: String
+  , series             :: Array ResultSeries
+  }
+
+type ResultSeries =
+  { name    :: String
+  , results :: Array DataPoint
+  }
+
+type DataPoint =
+  { size  :: Number
+  , stats :: Stats
+  }
+
+type Stats =
+  { deviation :: Number
+  , mean      :: Number
+  , moe       :: Number
+  , rme       :: Number
+  , sample    :: Array Number
+  , sem       :: Number
+  , variance  :: Number
+  }
 
 type Any = Exists Identity
 
@@ -107,16 +130,6 @@ rejig results = map toSeries names
     }
   the [x] = x
 
-benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) Unit
-benchmarkToFile bench path = do
-  results <- runBenchmark bench
-  writeTextFile UTF8 path $ jsonStringify results
-
-benchmarkToStdout :: forall e a. Benchmark e a -> Eff (BenchEffects e) Unit
-benchmarkToStdout bench = do
-  results <- runBenchmark bench
-  stdoutWrite $ jsonStringify results
-
 foreign import runBenchmarkImpl
   """
   function runBenchmarkImpl(fn) {
@@ -132,7 +145,7 @@ foreign import jsonStringify
   function jsonStringify(obj) {
     return JSON.stringify(obj)
   }
-  """ :: Array ResultSeries -> String
+  """ :: BenchmarkResult -> String
 
 foreign import stdoutWrite
   """
