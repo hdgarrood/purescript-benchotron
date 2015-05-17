@@ -45,7 +45,7 @@ main = do
 ```
 
 You can now generate SVG graphs of these results by visiting
-<http://harry.garrood.me/purescript-benchotron>.
+<http://harry.garrood.me/purescript-benchotron-svg-renderer>.
 
 Further information, such as the meaning of each of the attributes of a
 `Benchmark` value, is available in the [documentation](docs/Benchotron.md).
