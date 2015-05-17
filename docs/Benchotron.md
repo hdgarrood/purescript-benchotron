@@ -28,9 +28,7 @@ to each of the competing functions in the benchmark.
   benchmarks will also take much longer to run.
 * `gen`: An Eff action which should produce a random input of the given
   argument size when executed.
-* `functions`: An array of competing functions to be benchmarked. The
-  return type is `Any` just so that it typechecks; this module exports a
-  function `toAny :: forall a. a -> Any` which you can use here.
+* `functions`: An array of competing functions to be benchmarked.
 
 #### `BenchmarkFunction`
 
@@ -112,20 +110,6 @@ type DataPoint = { stats :: Stats, size :: Number }
 
 ``` purescript
 type Stats = { variance :: Number, sem :: Number, sample :: Array Number, rme :: Number, moe :: Number, mean :: Number, deviation :: Number }
-```
-
-
-#### `Any`
-
-``` purescript
-type Any = Exists Identity
-```
-
-
-#### `toAny`
-
-``` purescript
-toAny :: forall a. a -> Any
 ```
 
 
