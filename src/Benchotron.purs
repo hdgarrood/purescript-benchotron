@@ -27,7 +27,7 @@ import Node.FS.Sync (writeTextFile)
 import Node.Encoding (Encoding(..))
 
 type Benchmark e a =
-  { name               :: String
+  { title              :: String
   , sizes              :: Array Number
   , sizeInterpretation :: String
   , inputsPerSize      :: Number
@@ -59,7 +59,7 @@ runBenchmark benchmark = do
   stderrWrite "\n"
   let series = rejig results
   return
-    { name: benchmark.name
+    { title: benchmark.title
     , sizeInterpretation: benchmark.sizeInterpretation
     , series: series
     }
@@ -71,7 +71,7 @@ benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) U
 benchmarkToFile bench path = do
   results <- runBenchmark bench
   writeTextFile UTF8 path $ jsonStringify results
-  stderrWrite $ "Benchmark \""<> bench.name <> "\" results written to " <> path <> "\n"
+  stderrWrite $ "Benchmark \""<> bench.title <> "\" results written to " <> path <> "\n"
 
 benchmarkToStdout :: forall e a. Benchmark e a -> Eff (BenchEffects e) Unit
 benchmarkToStdout bench = do
@@ -85,7 +85,7 @@ type BenchEffects e
     )
 
 type BenchmarkResult =
-  { name               :: String
+  { title              :: String
   , sizeInterpretation :: String
   , series             :: Array ResultSeries
   }
