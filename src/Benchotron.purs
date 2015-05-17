@@ -32,7 +32,7 @@ type Benchmark e a =
   , sizeInterpretation :: String
   , inputsPerSize      :: Number
   , gen                :: Number -> Eff (BenchEffects e) a
-  , functions          :: Array { name                     :: String, fn :: a -> Any }
+  , functions          :: Array { name :: String, fn :: a -> Any }
   }
 
 runBenchmark :: forall e a. Benchmark e a -> Eff (BenchEffects e) BenchmarkResult
@@ -56,6 +56,7 @@ runBenchmark benchmark = do
 
     return { size: size, allStats: allStats }
 
+  stderrWrite "\n"
   let series = rejig results
   return
     { name: benchmark.name
@@ -70,6 +71,7 @@ benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) U
 benchmarkToFile bench path = do
   results <- runBenchmark bench
   writeTextFile UTF8 path $ jsonStringify results
+  stderrWrite $ "Benchmark \""<> bench.name <> "\" results written to " <> path <> "\n"
 
 benchmarkToStdout :: forall e a. Benchmark e a -> Eff (BenchEffects e) Unit
 benchmarkToStdout bench = do
