@@ -21,7 +21,7 @@ benchSum =
   , inputsPerSize: 1
   , gen: randomArray
   , functions: [ { name: "foldr",   fn: toAny <<< foldr (+) 0 }
-               , { name: "foldMap", fn: toAny <<< runAdditive <<< foldap Additive }
+               , { name: "foldMap", fn: toAny <<< runAdditive <<< foldMap Additive }
                ]
   }
 
