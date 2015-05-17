@@ -69,9 +69,15 @@ newtype BenchmarkFunctionF a b = BenchmarkFunctionF
   , before :: a -> b
   }
 
+-- | Create a `BenchmarkFunction`, given a name and a function to be
+-- | benchmarked.
 benchFn :: forall a r. String -> (a -> r) -> BenchmarkFunction a
 benchFn name fn = benchFn' name fn id
 
+-- | Create a `BenchmarkFunction`. Like `benchFn`, except that it accepts a
+-- | third argument which will be used to preprocess the input, before starting
+-- | the benchmark. This is useful if you want to compare two functions which
+-- | have different argument types.
 benchFn' :: forall a b r. String -> (b -> r) -> (a -> b) -> BenchmarkFunction a
 benchFn' name fn before =
   BenchmarkFunction $ mkExists $ BenchmarkFunctionF
