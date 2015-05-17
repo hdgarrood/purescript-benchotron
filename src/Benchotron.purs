@@ -160,7 +160,12 @@ foreign import runBenchmarkImpl
   function runBenchmarkImpl(fn) {
     var Benchmark = require('benchmark')
     return function() {
-      return Benchmark(fn).run().stats
+      var b = new Benchmark(fn)
+      b.run()
+      if (typeof b.error !== 'undefined') {
+         throw b.error
+      }
+      return b.stats
     }
   }
   """ :: forall e r. (Unit -> r) -> Eff e Stats
