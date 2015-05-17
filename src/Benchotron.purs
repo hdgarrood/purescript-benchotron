@@ -22,7 +22,8 @@ import Data.Array.Unsafe (head)
 import Data.String (joinWith)
 import Data.Traversable (for)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (Exception())
+import Control.Monad.Eff.Exception (Exception(), Error(), catchException,
+                                    throwException, message, error)
 import Node.FS (FS())
 import Node.FS.Sync (writeTextFile)
 import Node.Encoding (Encoding(..))
@@ -100,8 +101,10 @@ runBenchmark benchmark = do
 
     inputs   <- for (1..benchmark.inputsPerSize) (const (benchmark.gen size))
     allStats <- for benchmark.functions $ \function -> do
-                  stats <- runBenchmarkFunction inputs function
-                  return { name: getName function, stats: stats }
+                  let name = getName function
+                  handleBenchmarkException name size $ do
+                    stats <- runBenchmarkFunction inputs function
+                    return { name: name, stats: stats }
 
     return { size: size, allStats: allStats }
 
@@ -115,6 +118,28 @@ runBenchmark benchmark = do
 
   where
   withIndices arr = zip (1..(length arr)) arr
+
+-- TODO: use purescript-exceptions instead. This appears to be blocked on:
+--    https://github.com/purescript/purescript-exceptions/issues/5
+foreign import handleBenchmarkException
+  """
+  function handleBenchmarkException(name) {
+    return function(size) {
+      return function(innerAction) {
+        return function() {
+          try {
+            return innerAction()
+          } catch(innerError) {
+            throw new Error(
+              'While running Benchotron benchmark function: ' + name + ' ' +
+                'at n=' + String(size) + ':\n' +
+                innerError.name + ': ' + innerError.message)
+          }
+        }
+      }
+    }
+  }
+  """ :: forall e a. String -> Number -> Eff (BenchEffects e) a -> Eff (BenchEffects e) a
 
 runBenchmarkFunction :: forall e a. Array a -> BenchmarkFunction a -> Eff (BenchEffects e) Stats
 runBenchmarkFunction inputs (BenchmarkFunction function') =
