@@ -12,8 +12,6 @@ module Benchotron
   , ResultSeries()
   , DataPoint()
   , Stats()
-  , Any()
-  , toAny
   ) where
 
 import Data.Exists
@@ -49,9 +47,7 @@ import Node.Encoding (Encoding(..))
 -- |   benchmarks will also take much longer to run.
 -- | * `gen`: An Eff action which should produce a random input of the given
 -- |   argument size when executed.
--- | * `functions`: An array of competing functions to be benchmarked. The
--- |   return type is `Any` just so that it typechecks; this module exports a
--- |   function `toAny :: forall a. a -> Any` which you can use here.
+-- | * `functions`: An array of competing functions to be benchmarked.
 type Benchmark e a =
   { title              :: String
   , sizes              :: Array Number
