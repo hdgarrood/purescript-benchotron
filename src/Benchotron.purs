@@ -62,7 +62,7 @@ runBenchmark :: forall e a. Benchmark e a -> Eff (BenchEffects e) BenchmarkResul
 runBenchmark benchmark = do
   let countSizes = length benchmark.sizes
   results <- for (withIndices benchmark.sizes) $ \(Tuple idx size) -> do
-    stderrWrite $ joinWith "" [" Benchmarking... n="
+    stderrWrite $ joinWith "" [ "Benchmarking... n="
                               , show size
                               , " ("
                               , show idx
