@@ -1,7 +1,7 @@
 # purescript-benchotron
 
-Straightforward benchmarking. I am sorry about the name (purescript-benchmark
-was taken).
+Straightforward benchmarking via [Benchmark.js][]. I am sorry about the name
+(purescript-benchmark was taken).
 
 ## usage
 
@@ -49,3 +49,5 @@ You can now generate SVG graphs of these results by visiting
 
 Further information, such as the meaning of each of the attributes of a
 `Benchmark` value, is available in the [documentation](docs/Benchotron.md).
+
+[Benchmark.js]: http://benchmarkjs.com
