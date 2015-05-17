@@ -1,6 +1,9 @@
 
 module Benchotron
   ( Benchmark()
+  , BenchmarkFunction()
+  , benchFn
+  , benchFn'
   , runBenchmark
   , benchmarkToFile
   , benchmarkToStdout
@@ -55,8 +58,30 @@ type Benchmark e a =
   , sizeInterpretation :: String
   , inputsPerSize      :: Number
   , gen                :: Number -> Eff (BenchEffects e) a
-  , functions          :: Array { name :: String, fn :: a -> Any }
+  , functions          :: Array (BenchmarkFunction a)
   }
+
+newtype BenchmarkFunction a = BenchmarkFunction (Exists (BenchmarkFunctionF a))
+
+newtype BenchmarkFunctionF a b = BenchmarkFunctionF
+  { name :: String
+  , fn :: b -> Any
+  , before :: a -> b
+  }
+
+benchFn :: forall a r. String -> (a -> r) -> BenchmarkFunction a
+benchFn name fn = benchFn' name fn id
+
+benchFn' :: forall a b r. String -> (b -> r) -> (a -> b) -> BenchmarkFunction a
+benchFn' name fn before =
+  BenchmarkFunction $ mkExists $ BenchmarkFunctionF
+    { name: name, fn: toAny <<< fn, before: before }
+
+getName :: forall a. BenchmarkFunction a -> String
+getName (BenchmarkFunction f) = runExists go f
+  where
+  go :: forall b. BenchmarkFunctionF a b -> String
+  go (BenchmarkFunctionF o) = o.name
 
 runBenchmark :: forall e a. Benchmark e a -> Eff (BenchEffects e) BenchmarkResult
 runBenchmark benchmark = do
@@ -71,11 +96,10 @@ runBenchmark benchmark = do
                               , ") \r"
                               ]
 
-    inputs <- for (1..benchmark.inputsPerSize) (const (benchmark.gen size))
+    inputs   <- for (1..benchmark.inputsPerSize) (const (benchmark.gen size))
     allStats <- for benchmark.functions $ \function -> do
-      let f _ = map function.fn inputs
-      stats <- runBenchmarkImpl f
-      return { name: function.name, stats: stats }
+                  stats <- runBenchmarkFunction inputs function
+                  return { name: getName function, stats: stats }
 
     return { size: size, allStats: allStats }
 
@@ -89,6 +113,16 @@ runBenchmark benchmark = do
 
   where
   withIndices arr = zip (1..(length arr)) arr
+
+runBenchmarkFunction :: forall e a. Array a -> BenchmarkFunction a -> Eff (BenchEffects e) Stats
+runBenchmarkFunction inputs (BenchmarkFunction function') =
+  runExists go function'
+  where
+  go :: forall b. BenchmarkFunctionF a b -> Eff (BenchEffects e) Stats
+  go (BenchmarkFunctionF function) =
+    let inputs' = map function.before inputs
+        f = \_ -> toAny $ map function.fn inputs'
+    in runBenchmarkImpl f
 
 benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) Unit
 benchmarkToFile bench path = do
@@ -168,7 +202,7 @@ foreign import runBenchmarkImpl
       return b.stats
     }
   }
-  """ :: forall e r. (Unit -> r) -> Eff e Stats
+  """ :: forall e. (Unit -> Any) -> Eff e Stats
 
 foreign import jsonStringify
   """

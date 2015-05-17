@@ -5,7 +5,7 @@
 #### `Benchmark`
 
 ``` purescript
-type Benchmark e a = { functions :: Array { fn :: a -> Any, name :: String }, gen :: Number -> Eff (BenchEffects e) a, inputsPerSize :: Number, sizeInterpretation :: String, sizes :: Array Number, title :: String }
+type Benchmark e a = { functions :: Array (BenchmarkFunction a), gen :: Number -> Eff (BenchEffects e) a, inputsPerSize :: Number, sizeInterpretation :: String, sizes :: Array Number, title :: String }
 ```
 
 A value representing a benchmark to be performed. The type parameter 'e'
@@ -31,6 +31,27 @@ to each of the competing functions in the benchmark.
 * `functions`: An array of competing functions to be benchmarked. The
   return type is `Any` just so that it typechecks; this module exports a
   function `toAny :: forall a. a -> Any` which you can use here.
+
+#### `BenchmarkFunction`
+
+``` purescript
+newtype BenchmarkFunction a
+```
+
+
+#### `benchFn`
+
+``` purescript
+benchFn :: forall a r. String -> (a -> r) -> BenchmarkFunction a
+```
+
+
+#### `benchFn'`
+
+``` purescript
+benchFn' :: forall a b r. String -> (b -> r) -> (a -> b) -> BenchmarkFunction a
+```
+
 
 #### `runBenchmark`
 

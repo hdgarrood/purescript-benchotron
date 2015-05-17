@@ -9,12 +9,12 @@ import Benchotron
 benchSum :: forall e. Benchmark e (Array Number)
 benchSum =
   { title: "Finding the sum of an array"
-  , sizes: (1..50) <#> (*1000)
+  , sizes: (1..5) <#> (*1000)
   , sizeInterpretation: "Number of elements in the array"
   , inputsPerSize: 1
   , gen: randomArray
-  , functions: [ { name: "foldr",   fn: toAny <<< foldr (+) 0 }
-               , { name: "foldMap", fn: toAny <<< runAdditive <<< foldMap Additive }
+  , functions: [ benchFn "foldr" (foldr (+) 0)
+               , benchFn "foldMap" (runAdditive <<< foldMap Additive)
                ]
   }
 
