@@ -5,7 +5,7 @@
 #### `Benchmark`
 
 ``` purescript
-type Benchmark e a = { functions :: Array { fn :: a -> Any, name :: String }, gen :: Number -> Eff (BenchEffects e) a, inputsPerSize :: Number, sizeInterpretation :: String, sizes :: Array Number, name :: String }
+type Benchmark e a = { functions :: Array { fn :: a -> Any, name :: String }, gen :: Number -> Eff (BenchEffects e) a, inputsPerSize :: Number, sizeInterpretation :: String, sizes :: Array Number, title :: String }
 ```
 
 
@@ -40,7 +40,7 @@ type BenchEffects e = (fs :: FS, err :: Exception | e)
 #### `BenchmarkResult`
 
 ``` purescript
-type BenchmarkResult = { series :: Array ResultSeries, sizeInterpretation :: String, name :: String }
+type BenchmarkResult = { series :: Array ResultSeries, sizeInterpretation :: String, title :: String }
 ```
 
 
