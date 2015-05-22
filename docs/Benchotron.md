@@ -57,10 +57,17 @@ third argument which will be used to preprocess the input, before starting
 the benchmark. This is useful if you want to compare two functions which
 have different argument types.
 
+#### `BenchM`
+
+``` purescript
+type BenchM e a = Eff (BenchEffects e) a
+```
+
+
 #### `runBenchmark`
 
 ``` purescript
-runBenchmark :: forall e a. Benchmark e a -> Eff (BenchEffects e) BenchmarkResult
+runBenchmark :: forall e a. Benchmark e a -> (Number -> Number -> BenchM e Unit) -> BenchM e BenchmarkResult
 ```
 
 
@@ -70,6 +77,8 @@ runBenchmark :: forall e a. Benchmark e a -> Eff (BenchEffects e) BenchmarkResul
 benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) Unit
 ```
 
+Run a benchmark and print the results to a file. This will only work on
+node.js.
 
 #### `benchmarkToStdout`
 
@@ -77,6 +86,8 @@ benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) U
 benchmarkToStdout :: forall e a. Benchmark e a -> Eff (BenchEffects e) Unit
 ```
 
+Run a benchmark and print the results to standard output. This will only
+work on node.js.
 
 #### `BenchEffects`
 

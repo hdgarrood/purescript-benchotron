@@ -7,6 +7,7 @@ module Benchotron
   , runBenchmark
   , benchmarkToFile
   , benchmarkToStdout
+  , BenchM()
   , BenchEffects()
   , BenchmarkResult()
   , ResultSeries()
@@ -21,6 +22,8 @@ import Data.Array (map, filter, (..), length)
 import Data.Array.Unsafe (head)
 import Data.String (joinWith)
 import Data.Traversable (for)
+import Control.Apply ((<*))
+import Control.Monad (replicateM)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (Exception(), Error(), catchException,
                                     throwException, message, error)
@@ -86,20 +89,19 @@ getName (BenchmarkFunction f) = runExists go f
   go :: forall b. BenchmarkFunctionF a b -> String
   go (BenchmarkFunctionF o) = o.name
 
-runBenchmark :: forall e a. Benchmark e a -> Eff (BenchEffects e) BenchmarkResult
-runBenchmark benchmark = do
-  let countSizes = length benchmark.sizes
-  results <- for (withIndices benchmark.sizes) $ \(Tuple idx size) -> do
-    stderrWrite $ joinWith "" [ "Benchmarking... n="
-                              , show size
-                              , " ("
-                              , show idx
-                              , "/"
-                              , show countSizes
-                              , ") \r"
-                              ]
+type BenchM e a = Eff (BenchEffects e) a
 
-    inputs   <- for (1..benchmark.inputsPerSize) (const (benchmark.gen size))
+runBenchmark :: forall e a.
+  Benchmark e a ->
+  -- ^ The Benchmark to be run.
+  (Number -> Number -> BenchM e Unit) ->
+  -- ^ Callback for when the size changes; the arguments are current size index
+  --   (1-based) , and the current size.
+  BenchM e BenchmarkResult
+runBenchmark benchmark onChange = do
+  results <- for (withIndices benchmark.sizes) $ \(Tuple idx size) -> do
+    onChange idx size
+    inputs   <- replicateM benchmark.inputsPerSize (benchmark.gen size)
     allStats <- for benchmark.functions $ \function -> do
                   let name = getName function
                   handleBenchmarkException name size $ do
@@ -108,7 +110,6 @@ runBenchmark benchmark = do
 
     return { size: size, allStats: allStats }
 
-  stderrWrite "\n"
   let series = rejig results
   return
     { title: benchmark.title
@@ -118,6 +119,27 @@ runBenchmark benchmark = do
 
   where
   withIndices arr = zip (1..(length arr)) arr
+
+runBenchmarkConsole :: forall e a. Benchmark e a -> BenchM e BenchmarkResult
+runBenchmarkConsole benchmark = do
+  stderrWrite $ "### Benchmark: " <> benchmark.title <> " ###\n"
+  r <- runBenchmark benchmark progress
+  stderrWrite "\n"
+  return r
+  where
+  countSizes = length benchmark.sizes
+  clearLine = "\r\ESC[K"
+  progress idx size =
+    stderrWrite $ joinWith ""
+      [ clearLine
+      , "Running... n="
+      , show size
+      , " ("
+      , show idx
+      , "/"
+      , show countSizes
+      , ")"
+      ]
 
 -- TODO: use purescript-exceptions instead. This appears to be blocked on:
 --    https://github.com/purescript/purescript-exceptions/issues/5
@@ -153,15 +175,19 @@ runBenchmarkFunction inputs (BenchmarkFunction function') =
       monkeyPatchBenchmark benchmarkJS
       runBenchmarkImpl benchmarkJS f
 
+-- | Run a benchmark and print the results to a file. This will only work on
+-- | node.js.
 benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) Unit
 benchmarkToFile bench path = do
-  results <- runBenchmark bench
+  results <- runBenchmarkConsole bench
   writeTextFile UTF8 path $ jsonStringify results
   stderrWrite $ "Benchmark \""<> bench.title <> "\" results written to " <> path <> "\n"
 
+-- | Run a benchmark and print the results to standard output. This will only
+-- | work on node.js.
 benchmarkToStdout :: forall e a. Benchmark e a -> Eff (BenchEffects e) Unit
 benchmarkToStdout bench = do
-  results <- runBenchmark bench
+  results <- runBenchmarkConsole bench
   stdoutWrite $ jsonStringify results
 
 type BenchEffects e
