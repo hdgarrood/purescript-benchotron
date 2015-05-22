@@ -22,6 +22,8 @@ import Data.Array (map, filter, (..), length)
 import Data.Array.Unsafe (head)
 import Data.String (joinWith)
 import Data.Traversable (for)
+import Data.Date (now, Now())
+import Data.Date.Locale (toLocaleTimeString, Locale())
 import Control.Apply ((<*))
 import Control.Monad (replicateM)
 import Control.Monad.Eff (Eff())
@@ -123,10 +125,13 @@ runBenchmark benchmark onChange = do
 runBenchmarkConsole :: forall e a. Benchmark e a -> BenchM e BenchmarkResult
 runBenchmarkConsole benchmark = do
   stderrWrite $ "### Benchmark: " <> benchmark.title <> " ###\n"
+  noteTime \t -> "Started at: " <> t <> "\n"
   r <- runBenchmark benchmark progress
   stderrWrite "\n"
+  noteTime \t -> "Finished at: " <> t <> "\n"
   return r
   where
+  noteTime f = now >>= toLocaleTimeString >>= (stderrWrite <<< f)
   countSizes = length benchmark.sizes
   clearLine = "\r\ESC[K"
   progress idx size =
@@ -181,7 +186,7 @@ benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) U
 benchmarkToFile bench path = do
   results <- runBenchmarkConsole bench
   writeTextFile UTF8 path $ jsonStringify results
-  stderrWrite $ "Benchmark \""<> bench.title <> "\" results written to " <> path <> "\n"
+  stderrWrite $ "Results written to " <> path <> "\n"
 
 -- | Run a benchmark and print the results to standard output. This will only
 -- | work on node.js.
@@ -191,8 +196,10 @@ benchmarkToStdout bench = do
   stdoutWrite $ jsonStringify results
 
 type BenchEffects e
-  = ( err :: Exception
-    , fs :: FS
+  = ( err    :: Exception
+    , fs     :: FS
+    , now    :: Now
+    , locale :: Locale
     | e
     )
 
