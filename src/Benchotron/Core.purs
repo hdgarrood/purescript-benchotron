@@ -1,7 +1,9 @@
 
-module Benchotron
+module Benchotron.Core
   ( Benchmark()
+  , BenchmarkF()
   , BenchmarkFunction()
+  , mkBenchmark
   , benchFn
   , benchFn'
   , runBenchmark
@@ -32,6 +34,9 @@ import Control.Monad.Eff.Exception (Exception(), Error(), catchException,
 import Node.FS (FS())
 import Node.FS.Sync (writeTextFile)
 import Node.Encoding (Encoding(..))
+import Debug.Trace (Trace())
+
+import Benchotron.StdIO
 
 -- | A value representing a benchmark to be performed. The type parameter 'e'
 -- | is provided to allow you to supply a random value generator with arbitrary
@@ -40,6 +45,7 @@ import Node.Encoding (Encoding(..))
 -- |
 -- | **Attributes**
 -- |
+-- | * `slug`: An identifier for the benchmark. Used for filenames.
 -- | * `title`: The title of the benchmark.
 -- | * `sizes`: An array of numbers representing each input size you would like
 -- |   your benchmark to be run with. The interpretation of 'size' depends on
@@ -54,14 +60,30 @@ import Node.Encoding (Encoding(..))
 -- | * `gen`: An Eff action which should produce a random input of the given
 -- |   argument size when executed.
 -- | * `functions`: An array of competing functions to be benchmarked.
-type Benchmark e a =
-  { title              :: String
+type BenchmarkF e a =
+  { slug               :: String
+  , title              :: String
   , sizes              :: Array Number
   , sizeInterpretation :: String
   , inputsPerSize      :: Number
   , gen                :: Number -> Eff (BenchEffects e) a
   , functions          :: Array (BenchmarkFunction a)
   }
+
+-- This is only necessary because psc doesn't support partially applied type
+-- synonyms.
+newtype BenchmarkFF e a = BenchmarkFF (BenchmarkF e a)
+
+newtype Benchmark e = Benchmark (Exists (BenchmarkFF e))
+
+mkBenchmark :: forall e a. BenchmarkF e a -> Benchmark e
+mkBenchmark = Benchmark <<< mkExists <<< BenchmarkFF
+
+unpackBenchmark :: forall e r. (forall a. BenchmarkF e a -> r) -> Benchmark e -> r
+unpackBenchmark f (Benchmark b) = runExists f' b
+  where
+  f' :: forall a. BenchmarkFF e a -> r
+  f' (BenchmarkFF b') = f b'
 
 newtype BenchmarkFunction a = BenchmarkFunction (Exists (BenchmarkFunctionF a))
 
@@ -93,14 +115,23 @@ getName (BenchmarkFunction f) = runExists go f
 
 type BenchM e a = Eff (BenchEffects e) a
 
-runBenchmark :: forall e a.
-  Benchmark e a ->
+runBenchmark :: forall e.
+  Benchmark e ->
   -- ^ The Benchmark to be run.
   (Number -> Number -> BenchM e Unit) ->
   -- ^ Callback for when the size changes; the arguments are current size index
   --   (1-based) , and the current size.
   BenchM e BenchmarkResult
-runBenchmark benchmark onChange = do
+runBenchmark = unpackBenchmark runBenchmarkF
+
+runBenchmarkF :: forall e a.
+  BenchmarkF e a ->
+  -- ^ The Benchmark to be run.
+  (Number -> Number -> BenchM e Unit) ->
+  -- ^ Callback for when the size changes; the arguments are current size index
+  --   (1-based) , and the current size.
+  BenchM e BenchmarkResult
+runBenchmarkF benchmark onChange = do
   results <- for (withIndices benchmark.sizes) $ \(Tuple idx size) -> do
     onChange idx size
     inputs   <- replicateM benchmark.inputsPerSize (benchmark.gen size)
@@ -122,11 +153,11 @@ runBenchmark benchmark onChange = do
   where
   withIndices arr = zip (1..(length arr)) arr
 
-runBenchmarkConsole :: forall e a. Benchmark e a -> BenchM e BenchmarkResult
-runBenchmarkConsole benchmark = do
+runBenchmarkFConsole :: forall e a. BenchmarkF e a -> BenchM e BenchmarkResult
+runBenchmarkFConsole benchmark = do
   stderrWrite $ "### Benchmark: " <> benchmark.title <> " ###\n"
   noteTime \t -> "Started at: " <> t <> "\n"
-  r <- runBenchmark benchmark progress
+  r <- runBenchmarkF benchmark progress
   stderrWrite "\n"
   noteTime \t -> "Finished at: " <> t <> "\n"
   return r
@@ -182,17 +213,23 @@ runBenchmarkFunction inputs (BenchmarkFunction function') =
 
 -- | Run a benchmark and print the results to a file. This will only work on
 -- | node.js.
-benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) Unit
-benchmarkToFile bench path = do
-  results <- runBenchmarkConsole bench
+benchmarkToFile :: forall e. Benchmark e -> String -> Eff (BenchEffects e) Unit
+benchmarkToFile = unpackBenchmark benchmarkFToFile
+
+benchmarkFToFile :: forall e a. BenchmarkF e a -> String -> Eff (BenchEffects e) Unit
+benchmarkFToFile bench path = do
+  results <- runBenchmarkFConsole bench
   writeTextFile UTF8 path $ jsonStringify results
   stderrWrite $ "Results written to " <> path <> "\n"
 
 -- | Run a benchmark and print the results to standard output. This will only
 -- | work on node.js.
-benchmarkToStdout :: forall e a. Benchmark e a -> Eff (BenchEffects e) Unit
-benchmarkToStdout bench = do
-  results <- runBenchmarkConsole bench
+benchmarkToStdout :: forall e. Benchmark e -> Eff (BenchEffects e) Unit
+benchmarkToStdout = unpackBenchmark benchmarkFToStdout
+
+benchmarkFToStdout :: forall e a. BenchmarkF e a -> Eff (BenchEffects e) Unit
+benchmarkFToStdout bench = do
+  results <- runBenchmarkFConsole bench
   stdoutWrite $ jsonStringify results
 
 type BenchEffects e
@@ -200,6 +237,7 @@ type BenchEffects e
     , fs     :: FS
     , now    :: Now
     , locale :: Locale
+    , trace  :: Trace
     | e
     )
 
@@ -294,18 +332,3 @@ foreign import jsonStringify
   }
   """ :: BenchmarkResult -> String
 
-foreign import stdoutWrite
-  """
-  function stdoutWrite(str) {
-    return function() {
-      process.stdout.write(str)
-    }
-  } """ :: forall e. String -> Eff (BenchEffects e) Unit
-
-foreign import stderrWrite
-  """
-  function stderrWrite(str) {
-    return function() {
-      process.stderr.write(str)
-    }
-  } """ :: forall e. String -> Eff (BenchEffects e) Unit

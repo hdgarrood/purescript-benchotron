@@ -4,11 +4,13 @@ import Data.Array
 import Data.Foldable
 import Data.Monoid.Additive
 import Control.Monad.Eff
-import Benchotron
+import Benchotron.Core
+import Benchotron.Suite
 
-benchSum :: forall e. Benchmark e (Array Number)
-benchSum =
-  { title: "Finding the sum of an array"
+benchSum :: forall e. Benchmark e
+benchSum = mkBenchmark
+  { slug: "sum"
+  , title: "Finding the sum of an array"
   , sizes: (1..5) <#> (*1000)
   , sizeInterpretation: "Number of elements in the array"
   , inputsPerSize: 1
@@ -29,5 +31,4 @@ foreign import randomArray """
     }
   } """ :: forall e. Number -> Eff (BenchEffects e) (Array Number)
 
-main = do
-  benchmarkToFile benchSum "tmp/benchSum.json"
+main = runSuite [benchSum]
