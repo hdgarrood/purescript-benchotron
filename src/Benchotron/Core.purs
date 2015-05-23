@@ -4,17 +4,16 @@ module Benchotron.Core
   , BenchmarkF()
   , BenchmarkFunction()
   , mkBenchmark
+  , unpackBenchmark
   , benchFn
   , benchFn'
   , runBenchmark
-  , benchmarkToFile
-  , benchmarkToStdout
+  , runBenchmarkF
   , BenchM()
   , BenchEffects()
   , BenchmarkResult()
   , ResultSeries()
   , DataPoint()
-  , Stats()
   ) where
 
 import Data.Exists
@@ -24,19 +23,20 @@ import Data.Array (map, filter, (..), length)
 import Data.Array.Unsafe (head)
 import Data.String (joinWith)
 import Data.Traversable (for)
-import Data.Date (now, Now())
-import Data.Date.Locale (toLocaleTimeString, Locale())
+import Data.Date (Now())
+import Data.Date.Locale (Locale())
 import Control.Apply ((<*))
 import Control.Monad (replicateM)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (Exception(), Error(), catchException,
                                     throwException, message, error)
 import Node.FS (FS())
-import Node.FS.Sync (writeTextFile)
-import Node.Encoding (Encoding(..))
+import Node.ReadLine (Console())
 import Debug.Trace (Trace())
 
 import Benchotron.StdIO
+import Benchotron.BenchmarkJS
+import Benchotron.Utils
 
 -- | A value representing a benchmark to be performed. The type parameter 'e'
 -- | is provided to allow you to supply a random value generator with arbitrary
@@ -153,30 +153,6 @@ runBenchmarkF benchmark onChange = do
   where
   withIndices arr = zip (1..(length arr)) arr
 
-runBenchmarkFConsole :: forall e a. BenchmarkF e a -> BenchM e BenchmarkResult
-runBenchmarkFConsole benchmark = do
-  stderrWrite $ "### Benchmark: " <> benchmark.title <> " ###\n"
-  noteTime \t -> "Started at: " <> t <> "\n"
-  r <- runBenchmarkF benchmark progress
-  stderrWrite "\n"
-  noteTime \t -> "Finished at: " <> t <> "\n"
-  return r
-  where
-  noteTime f = now >>= toLocaleTimeString >>= (stderrWrite <<< f)
-  countSizes = length benchmark.sizes
-  clearLine = "\r\ESC[K"
-  progress idx size =
-    stderrWrite $ joinWith ""
-      [ clearLine
-      , "Running... n="
-      , show size
-      , " ("
-      , show idx
-      , "/"
-      , show countSizes
-      , ")"
-      ]
-
 -- TODO: use purescript-exceptions instead. This appears to be blocked on:
 --    https://github.com/purescript/purescript-exceptions/issues/5
 foreign import handleBenchmarkException
@@ -211,33 +187,14 @@ runBenchmarkFunction inputs (BenchmarkFunction function') =
       monkeyPatchBenchmark benchmarkJS
       runBenchmarkImpl benchmarkJS f
 
--- | Run a benchmark and print the results to a file. This will only work on
--- | node.js.
-benchmarkToFile :: forall e. Benchmark e -> String -> Eff (BenchEffects e) Unit
-benchmarkToFile = unpackBenchmark benchmarkFToFile
-
-benchmarkFToFile :: forall e a. BenchmarkF e a -> String -> Eff (BenchEffects e) Unit
-benchmarkFToFile bench path = do
-  results <- runBenchmarkFConsole bench
-  writeTextFile UTF8 path $ jsonStringify results
-  stderrWrite $ "Results written to " <> path <> "\n"
-
--- | Run a benchmark and print the results to standard output. This will only
--- | work on node.js.
-benchmarkToStdout :: forall e. Benchmark e -> Eff (BenchEffects e) Unit
-benchmarkToStdout = unpackBenchmark benchmarkFToStdout
-
-benchmarkFToStdout :: forall e a. BenchmarkF e a -> Eff (BenchEffects e) Unit
-benchmarkFToStdout bench = do
-  results <- runBenchmarkFConsole bench
-  stdoutWrite $ jsonStringify results
-
 type BenchEffects e
-  = ( err    :: Exception
-    , fs     :: FS
-    , now    :: Now
-    , locale :: Locale
-    , trace  :: Trace
+  = ( err       :: Exception
+    , fs        :: FS
+    , now       :: Now
+    , locale    :: Locale
+    , trace     :: Trace
+    , console   :: Console
+    , benchmark :: BENCHMARK
     | e
     )
 
@@ -257,21 +214,6 @@ type DataPoint =
   , stats :: Stats
   }
 
-type Stats =
-  { deviation :: Number
-  , mean      :: Number
-  , moe       :: Number
-  , rme       :: Number
-  , sample    :: Array Number
-  , sem       :: Number
-  , variance  :: Number
-  }
-
-type Any = Exists Identity
-
-toAny :: forall a. a -> Any
-toAny = mkExists <<< Identity
-
 type IntermediateResult =
   Array { size :: Number, allStats :: Array { name :: String, stats :: Stats } }
 
@@ -288,47 +230,4 @@ rejig results = map toSeries names
                           }) results
     }
   the [x] = x
-
-foreign import data BenchmarkJS :: *
-foreign import benchmarkJS "var benchmarkJS = require('benchmark')" :: BenchmarkJS
-
--- this is (unfortunately) necessary to stop Benchmark from trying to decompile
--- your functions to Strings, and then using 'eval' in the tests. I'm not quite
--- sure why it does this, but it breaks things, due to imported modules no
--- longer being in scope :(
---
--- Here, we monkey-patch the Benchmark object to fool the library into thinking
--- function decompilation is not supported, which should hopefully stop this
--- from happening.
-foreign import monkeyPatchBenchmark
-  """
-  function monkeyPatchBenchmark(b) {
-    return function() {
-      b.support.decompilation = false;
-    }
-  }
-  """ :: forall e. BenchmarkJS -> Eff (BenchEffects e) Unit
-
-foreign import runBenchmarkImpl
-  """
-  function runBenchmarkImpl(Benchmark) {
-    return function(fn) {
-      return function() {
-        var b = new Benchmark(fn)
-        b.run()
-        if (typeof b.error !== 'undefined') {
-           throw b.error
-        }
-        return b.stats
-      }
-    }
-  }
-  """ :: forall e. BenchmarkJS -> (Unit -> Any) -> Eff e Stats
-
-foreign import jsonStringify
-  """
-  function jsonStringify(obj) {
-    return JSON.stringify(obj)
-  }
-  """ :: BenchmarkResult -> String
 
