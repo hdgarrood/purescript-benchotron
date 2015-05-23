@@ -6,7 +6,7 @@ Straightforward benchmarking via [Benchmark.js][]. I am sorry about the name
 ## usage
 
 Suppose you want to find out which is faster out of `foldr (+) 0` and
-`runAdditive <<< foldMap Additive`. Let's also do the same for (\*) for good
+`runAdditive <<< foldMap Additive`. Let's also do the same for `(*)` for good
 measure. Start by creating some `Benchmark` values:
 
 ```purescript
@@ -57,7 +57,7 @@ foreign import randomArray """
 ```
 
 Now, run them with `runSuite`; this will save the results data for each
-benchmark to "tmp/sum.json" and "tmp/product.json" respectively.
+benchmark to `tmp/sum.json` and `tmp/product.json` respectively.
 
 ```purescript
 main = runSuite [benchSum, benchProduct]
