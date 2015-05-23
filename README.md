@@ -6,16 +6,22 @@ Straightforward benchmarking via [Benchmark.js][]. I am sorry about the name
 ## usage
 
 Suppose you want to find out which is faster out of `foldr (+) 0` and
-`runAdditive <<< foldMap Additive`. Start by creating a `Benchmark`:
+`runAdditive <<< foldMap Additive`. Let's also do the same for (\*) for good
+measure. Start by creating some `Benchmark` values:
 
 ```purescript
+import Data.Array
 import Data.Foldable
 import Data.Monoid.Additive
-import Benchotron
+import Data.Monoid.Multiplicative
+import Control.Monad.Eff
+import Benchotron.Core
+import Benchotron.UI.Console
 
-benchSum :: forall e. Benchmark e (Array Number)
-benchSum =
-  { title: "Finding the sum of an array"
+benchSum :: forall e. Benchmark e
+benchSum = mkBenchmark
+  { slug: "sum"
+  , title: "Finding the sum of an array"
   , sizes: (1..5) <#> (*1000)
   , sizeInterpretation: "Number of elements in the array"
   , inputsPerSize: 1
@@ -25,6 +31,18 @@ benchSum =
                ]
   }
 
+benchProduct :: forall e. Benchmark e
+benchProduct = mkBenchmark
+  { slug: "product"
+  , title: "Finding the product of an array"
+  , sizes: (1..5) <#> (*1000)
+  , sizeInterpretation: "Number of elements in the array"
+  , inputsPerSize: 1
+  , gen: randomArray
+  , functions: [ benchFn "foldr" (foldr (*) 0)
+               , benchFn "foldMap" (runMultiplicative <<< foldMap Multiplicative)
+               ]
+  }
 
 foreign import randomArray """
   function randomArray(n) {
@@ -38,11 +56,11 @@ foreign import randomArray """
   } """ :: forall e. Number -> Eff (BenchEffects e) (Array Number)
 ```
 
-Then, run it and save the results as JSON to a file:
+Now, run them with `runSuite`; this will save the results data for each
+benchmark to "tmp/sum.json" and "tmp/product.json" respectively.
 
 ```purescript
-main = do
-  benchmarkToFile benchSum "tmp/benchSum.json"
+main = runSuite [benchSum, benchProduct]
 ```
 
 You can now generate SVG graphs of these results by visiting
