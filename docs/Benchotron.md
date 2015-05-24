@@ -1,11 +1,11 @@
 # Module Documentation
 
-## Module Benchotron
+## Module Benchotron.Core
 
-#### `Benchmark`
+#### `BenchmarkF`
 
 ``` purescript
-type Benchmark e a = { functions :: Array (BenchmarkFunction a), gen :: Number -> Eff (BenchEffects e) a, inputsPerSize :: Number, sizeInterpretation :: String, sizes :: Array Number, title :: String }
+type BenchmarkF e a = { functions :: Array (BenchmarkFunction a), gen :: Number -> Eff (BenchEffects e) a, inputsPerSize :: Number, sizeInterpretation :: String, sizes :: Array Number, title :: String, slug :: String }
 ```
 
 A value representing a benchmark to be performed. The type parameter 'e'
@@ -15,6 +15,7 @@ to each of the competing functions in the benchmark.
 
 **Attributes**
 
+* `slug`: An identifier for the benchmark. Used for filenames.
 * `title`: The title of the benchmark.
 * `sizes`: An array of numbers representing each input size you would like
   your benchmark to be run with. The interpretation of 'size' depends on
@@ -29,6 +30,27 @@ to each of the competing functions in the benchmark.
 * `gen`: An Eff action which should produce a random input of the given
   argument size when executed.
 * `functions`: An array of competing functions to be benchmarked.
+
+#### `Benchmark`
+
+``` purescript
+newtype Benchmark e
+```
+
+
+#### `mkBenchmark`
+
+``` purescript
+mkBenchmark :: forall e a. BenchmarkF e a -> Benchmark e
+```
+
+
+#### `unpackBenchmark`
+
+``` purescript
+unpackBenchmark :: forall e r. (forall a. BenchmarkF e a -> r) -> Benchmark e -> r
+```
+
 
 #### `BenchmarkFunction`
 
@@ -67,32 +89,21 @@ type BenchM e a = Eff (BenchEffects e) a
 #### `runBenchmark`
 
 ``` purescript
-runBenchmark :: forall e a. Benchmark e a -> (Number -> Number -> BenchM e Unit) -> BenchM e BenchmarkResult
+runBenchmark :: forall e. Benchmark e -> (Number -> Number -> BenchM e Unit) -> BenchM e BenchmarkResult
 ```
 
 
-#### `benchmarkToFile`
+#### `runBenchmarkF`
 
 ``` purescript
-benchmarkToFile :: forall e a. Benchmark e a -> String -> Eff (BenchEffects e) Unit
+runBenchmarkF :: forall e a. BenchmarkF e a -> (Number -> Number -> BenchM e Unit) -> BenchM e BenchmarkResult
 ```
 
-Run a benchmark and print the results to a file. This will only work on
-node.js.
-
-#### `benchmarkToStdout`
-
-``` purescript
-benchmarkToStdout :: forall e a. Benchmark e a -> Eff (BenchEffects e) Unit
-```
-
-Run a benchmark and print the results to standard output. This will only
-work on node.js.
 
 #### `BenchEffects`
 
 ``` purescript
-type BenchEffects e = (fs :: FS, err :: Exception | e)
+type BenchEffects e = (benchmark :: BENCHMARK, console :: Console, trace :: Trace, locale :: Locale, now :: Now, fs :: FS, err :: Exception | e)
 ```
 
 
@@ -117,10 +128,89 @@ type DataPoint = { stats :: Stats, size :: Number }
 ```
 
 
-#### `Stats`
+
+## Module Benchotron.UI.Console
+
+#### `Answer`
 
 ``` purescript
-type Stats = { variance :: Number, sem :: Number, sample :: Array Number, rme :: Number, moe :: Number, mean :: Number, deviation :: Number }
+data Answer
+  = All 
+  | One Number
+```
+
+
+#### `parseAnswer`
+
+``` purescript
+parseAnswer :: String -> Maybe Answer
+```
+
+
+#### `runSuite`
+
+``` purescript
+runSuite :: forall e. Array (Benchmark e) -> BenchM e Unit
+```
+
+
+#### `showOptions`
+
+``` purescript
+showOptions :: forall e. Array (Benchmark e) -> Array String
+```
+
+
+#### `runBenchmarkConsole`
+
+``` purescript
+runBenchmarkConsole :: forall e. Benchmark e -> BenchM e BenchmarkResult
+```
+
+
+#### `runBenchmarkFConsole`
+
+``` purescript
+runBenchmarkFConsole :: forall e a. BenchmarkF e a -> BenchM e BenchmarkResult
+```
+
+
+#### `benchmarkToFile`
+
+``` purescript
+benchmarkToFile :: forall e. Benchmark e -> String -> Eff (BenchEffects e) Unit
+```
+
+Run a benchmark and print the results to a file. This will only work on
+node.js.
+
+#### `benchmarkFToFile`
+
+``` purescript
+benchmarkFToFile :: forall e a. BenchmarkF e a -> String -> Eff (BenchEffects e) Unit
+```
+
+
+#### `benchmarkToStdout`
+
+``` purescript
+benchmarkToStdout :: forall e. Benchmark e -> Eff (BenchEffects e) Unit
+```
+
+Run a benchmark and print the results to standard output. This will only
+work on node.js.
+
+#### `benchmarkFToStdout`
+
+``` purescript
+benchmarkFToStdout :: forall e a. BenchmarkF e a -> Eff (BenchEffects e) Unit
+```
+
+
+#### `stringifyResult`
+
+``` purescript
+stringifyResult :: BenchmarkResult -> String
 ```
 
 
