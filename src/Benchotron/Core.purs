@@ -145,7 +145,8 @@ runBenchmarkF benchmark onChange = do
 
   let series = rejig results
   return
-    { title: benchmark.title
+    { slug: benchmark.slug
+    , title: benchmark.title
     , sizeInterpretation: benchmark.sizeInterpretation
     , series: series
     }
@@ -199,7 +200,8 @@ type BenchEffects e
     )
 
 type BenchmarkResult =
-  { title              :: String
+  { slug               :: String
+  , title              :: String
   , sizeInterpretation :: String
   , series             :: Array ResultSeries
   }
