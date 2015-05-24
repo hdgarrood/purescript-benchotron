@@ -11,7 +11,7 @@ import Data.Date (now, Now())
 import Data.Date.Locale (toLocaleTimeString, Locale())
 import Control.Monad (when)
 import Control.Monad.Eff
-import Node.FS.Sync (writeTextFile, mkdir', stat, exists)
+import Node.FS.Sync (writeTextFile, mkdir, stat, exists)
 import Node.FS.Stats (isDirectory)
 import Node.Encoding (Encoding(..))
 import Global (readInt, isNaN)
@@ -42,7 +42,7 @@ runSuite bs = do
   go b = do
     stdoutWrite "\n"
     exists <- doesDirectoryExist "tmp"
-    when (not exists) (mkdir' "tmp" 511) -- 511 is 777 in octal
+    when (not exists) (mkdir "tmp")
     benchmarkToFile b ("tmp/" <> slug b <> ".json")
 
   doesDirectoryExist dir = do
