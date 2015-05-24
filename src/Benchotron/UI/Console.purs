@@ -9,8 +9,10 @@ import qualified Data.Array as A
 import Data.String (joinWith)
 import Data.Date (now, Now())
 import Data.Date.Locale (toLocaleTimeString, Locale())
+import Control.Monad (when)
 import Control.Monad.Eff
-import Node.FS.Sync (writeTextFile)
+import Node.FS.Sync (writeTextFile, mkdir', stat, exists)
+import Node.FS.Stats (isDirectory)
 import Node.Encoding (Encoding(..))
 import Global (readInt, isNaN)
 
@@ -37,7 +39,18 @@ runSuite bs = do
       questionLoop
 
   where
-  go b = stdoutWrite "\n" >> benchmarkToFile b ("tmp/" <> slug b <> ".json")
+  go b = do
+    stdoutWrite "\n"
+    exists <- doesDirectoryExist "tmp"
+    when (not exists) (mkdir' "tmp" 511) -- 511 is 777 in octal
+    benchmarkToFile b ("tmp/" <> slug b <> ".json")
+
+  doesDirectoryExist dir = do
+    ex <- exists dir
+    if ex
+       then isDirectory <$> stat dir
+       else return false
+
   slug = unpackBenchmark _.slug
 
   questionLoop =
