@@ -10,16 +10,16 @@
     "output"
   ],
   "dependencies": {
-    "purescript-arrays": "^0.3.7",
-    "purescript-exists": "^0.1.1",
-    "purescript-identity": "^0.3.0",
-    "purescript-profunctor": "^0.2.1",
-    "purescript-strings": "^0.4.5",
-    "purescript-foldable-traversable": "^0.3.1",
-    "purescript-exceptions": "^0.2.3",
+    "purescript-arrays": "^0.4.0",
+    "purescript-exists": "^0.2.0",
+    "purescript-identity": "^0.4.0",
+    "purescript-profunctor": "^0.3.0",
+    "purescript-strings": "^0.5.0",
+    "purescript-foldable-traversable": "^0.4.0",
+    "purescript-exceptions": "^0.3.0",
     "purescript-node-fs": "^0.6.0",
     "purescript-node-buffer": "^0.0.1",
     "purescript-node-readline": "^0.1.2",
-    "purescript-datetime": "~0.5.3"
+    "purescript-datetime": "~0.6.0"
   }
 }

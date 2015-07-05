@@ -156,25 +156,8 @@ runBenchmarkF benchmark onChange = do
 
 -- TODO: use purescript-exceptions instead. This appears to be blocked on:
 --    https://github.com/purescript/purescript-exceptions/issues/5
-foreign import handleBenchmarkException
-  """
-  function handleBenchmarkException(name) {
-    return function(size) {
-      return function(innerAction) {
-        return function() {
-          try {
-            return innerAction()
-          } catch(innerError) {
-            throw new Error(
-              'While running Benchotron benchmark function: ' + name + ' ' +
-                'at n=' + String(size) + ':\n' +
-                innerError.name + ': ' + innerError.message)
-          }
-        }
-      }
-    }
-  }
-  """ :: forall e a. String -> Number -> Eff (BenchEffects e) a -> Eff (BenchEffects e) a
+foreign import handleBenchmarkException ::
+  forall e a. String -> Number -> Eff (BenchEffects e) a -> Eff (BenchEffects e) a
 
 runBenchmarkFunction :: forall e a. Array a -> BenchmarkFunction a -> Eff (BenchEffects e) Stats
 runBenchmarkFunction inputs (BenchmarkFunction function') =
