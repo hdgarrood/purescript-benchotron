@@ -5,27 +5,28 @@ module Benchotron.StdIO
   , question
   ) where
 
+import Prelude
 import qualified Data.String as S
-import Debug.Trace (Trace())
+import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff (Eff())
 import Node.ReadLine
 
 foreign import stdoutWrite ::
-  forall e. String -> Eff (trace :: Trace | e) Unit
+  forall e. String -> Eff (console :: CONSOLE | e) Unit
 
 foreign import stderrWrite ::
-  forall e. String -> Eff (trace :: Trace | e) Unit
+  forall e. String -> Eff (console :: CONSOLE | e) Unit
 
 question :: forall e.
   String ->
-  (String -> Eff (console :: Console | e) Unit) ->
-  Eff (console :: Console | e) Unit
+  (String -> Eff (console :: CONSOLE | e) Unit) ->
+  Eff (console :: CONSOLE | e) Unit
 question q callback = do
-  i <- createInterface process.stdin process.stdout noCompletion
+  i <- createInterface noCompletion
   setLineHandler (\s -> closeInterface i >>= const (callback s)) i
   setPrompt q (S.length q) i
   prompt i
   return unit
 
 foreign import closeInterface ::
-  forall e. Interface -> Eff (console :: Console | e) Unit
+  forall e. Interface -> Eff (console :: CONSOLE | e) Unit

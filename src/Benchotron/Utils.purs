@@ -1,6 +1,7 @@
 
 module Benchotron.Utils where
 
+import Prelude
 import Data.Identity
 import Data.Exists
 

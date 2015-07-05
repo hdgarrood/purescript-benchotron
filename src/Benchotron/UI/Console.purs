@@ -1,11 +1,13 @@
 
 module Benchotron.UI.Console where
 
+import Prelude
 import Data.Tuple
 import Data.Maybe
 import Data.Foldable (traverse_)
 import Data.Profunctor.Strong (second, (&&&))
 import qualified Data.Array as A
+import Data.Int (fromNumber)
 import Data.String (joinWith)
 import Data.Date (now, Now())
 import Data.Date.Locale (toLocaleTimeString, Locale())
@@ -20,12 +22,12 @@ import Benchotron.Core
 import Benchotron.StdIO
 import Benchotron.Utils
 
-data Answer = All | One Number
+data Answer = All | One Int
 
 parseAnswer :: String -> Maybe Answer
 parseAnswer "*" = Just All
-parseAnswer x = let y = readInt 10 x
-                in  if isNaN y then Nothing else Just (One y)
+parseAnswer x = let y = fromNumber $ readInt 10 x
+                in  map One y
 
 runSuite :: forall e. Array (Benchmark e) -> BenchM e Unit
 runSuite bs = do
@@ -64,14 +66,14 @@ runSuite bs = do
             Nothing -> stdoutWrite "No such benchmark.\n" >> questionLoop
 
 showOptions :: forall e. Array (Benchmark e) -> Array String
-showOptions = A.map (showOption <<< second getSlugAndTitle) <<< withIndices
+showOptions = map (showOption <<< second getSlugAndTitle) <<< withIndices
   where
   getSlugAndTitle =
     unpackBenchmark _.slug &&& unpackBenchmark _.title
   showOption (Tuple index (Tuple slug title)) =
     "  " <> show index <> ") " <> slug <> " - " <> title
   withIndices arr =
-    zip (A.range 1 (A.length arr)) arr
+    A.zip (A.range 1 (A.length arr)) arr
 
 runBenchmarkConsole :: forall e. Benchmark e -> BenchM e BenchmarkResult
 runBenchmarkConsole = unpackBenchmark runBenchmarkFConsole
@@ -122,4 +124,4 @@ benchmarkFToStdout bench = do
   stdoutWrite $ stringifyResult results
 
 stringifyResult :: BenchmarkResult -> String
-stringifyResult = jsonStringify
+stringifyResult = unsafeJsonStringify

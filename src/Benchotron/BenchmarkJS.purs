@@ -1,6 +1,7 @@
 
 module Benchotron.BenchmarkJS where
 
+import Prelude
 import Control.Monad.Eff
 import Benchotron.Utils
 

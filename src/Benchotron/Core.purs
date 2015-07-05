@@ -16,23 +16,22 @@ module Benchotron.Core
   , DataPoint()
   ) where
 
+import Prelude
 import Data.Exists
 import Data.Identity
 import Data.Tuple
-import Data.Array (map, filter, (..), length)
+import Data.Array (filter, (..), length, replicateM, zip)
 import Data.Array.Unsafe (head)
 import Data.String (joinWith)
 import Data.Traversable (for)
 import Data.Date (Now())
 import Data.Date.Locale (Locale())
 import Control.Apply ((<*))
-import Control.Monad (replicateM)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (Exception(), Error(), catchException,
+import Control.Monad.Eff.Exception (EXCEPTION(), Error(), catchException,
                                     throwException, message, error)
 import Node.FS (FS())
-import Node.ReadLine (Console())
-import Debug.Trace (Trace())
+import Control.Monad.Eff.Console (CONSOLE())
 
 import Benchotron.StdIO
 import Benchotron.BenchmarkJS
@@ -63,10 +62,10 @@ import Benchotron.Utils
 type BenchmarkF e a =
   { slug               :: String
   , title              :: String
-  , sizes              :: Array Number
+  , sizes              :: Array Int
   , sizeInterpretation :: String
-  , inputsPerSize      :: Number
-  , gen                :: Number -> Eff (BenchEffects e) a
+  , inputsPerSize      :: Int
+  , gen                :: Int -> Eff (BenchEffects e) a
   , functions          :: Array (BenchmarkFunction a)
   }
 
@@ -118,7 +117,7 @@ type BenchM e a = Eff (BenchEffects e) a
 runBenchmark :: forall e.
   Benchmark e ->
   -- ^ The Benchmark to be run.
-  (Number -> Number -> BenchM e Unit) ->
+  (Int -> Int -> BenchM e Unit) ->
   -- ^ Callback for when the size changes; the arguments are current size index
   --   (1-based) , and the current size.
   BenchM e BenchmarkResult
@@ -127,7 +126,7 @@ runBenchmark = unpackBenchmark runBenchmarkF
 runBenchmarkF :: forall e a.
   BenchmarkF e a ->
   -- ^ The Benchmark to be run.
-  (Number -> Number -> BenchM e Unit) ->
+  (Int -> Int -> BenchM e Unit) ->
   -- ^ Callback for when the size changes; the arguments are current size index
   --   (1-based) , and the current size.
   BenchM e BenchmarkResult
@@ -137,7 +136,7 @@ runBenchmarkF benchmark onChange = do
     inputs   <- replicateM benchmark.inputsPerSize (benchmark.gen size)
     allStats <- for benchmark.functions $ \function -> do
                   let name = getName function
-                  handleBenchmarkException name size $ do
+                  handleBenchmarkEXCEPTION name size $ do
                     stats <- runBenchmarkFunction inputs function
                     return { name: name, stats: stats }
 
@@ -156,8 +155,8 @@ runBenchmarkF benchmark onChange = do
 
 -- TODO: use purescript-exceptions instead. This appears to be blocked on:
 --    https://github.com/purescript/purescript-exceptions/issues/5
-foreign import handleBenchmarkException ::
-  forall e a. String -> Number -> Eff (BenchEffects e) a -> Eff (BenchEffects e) a
+foreign import handleBenchmarkEXCEPTION ::
+  forall e a. String -> Int -> Eff (BenchEffects e) a -> Eff (BenchEffects e) a
 
 runBenchmarkFunction :: forall e a. Array a -> BenchmarkFunction a -> Eff (BenchEffects e) Stats
 runBenchmarkFunction inputs (BenchmarkFunction function') =
@@ -172,12 +171,11 @@ runBenchmarkFunction inputs (BenchmarkFunction function') =
       runBenchmarkImpl benchmarkJS f
 
 type BenchEffects e
-  = ( err       :: Exception
+  = ( err       :: EXCEPTION
     , fs        :: FS
     , now       :: Now
     , locale    :: Locale
-    , trace     :: Trace
-    , console   :: Console
+    , console   :: CONSOLE
     , benchmark :: BENCHMARK
     | e
     )
@@ -195,12 +193,12 @@ type ResultSeries =
   }
 
 type DataPoint =
-  { size  :: Number
+  { size  :: Int
   , stats :: Stats
   }
 
 type IntermediateResult =
-  Array { size :: Number, allStats :: Array { name :: String, stats :: Stats } }
+  Array { size :: Int, allStats :: Array { name :: String, stats :: Stats } }
 
 rejig :: IntermediateResult -> Array ResultSeries
 rejig [] = []
