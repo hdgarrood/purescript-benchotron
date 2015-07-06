@@ -136,7 +136,7 @@ runBenchmarkF benchmark onChange = do
     inputs   <- replicateM benchmark.inputsPerSize (benchmark.gen size)
     allStats <- for benchmark.functions $ \function -> do
                   let name = getName function
-                  handleBenchmarkEXCEPTION name size $ do
+                  handleBenchmarkException name size $ do
                     stats <- runBenchmarkFunction inputs function
                     return { name: name, stats: stats }
 
@@ -155,7 +155,7 @@ runBenchmarkF benchmark onChange = do
 
 -- TODO: use purescript-exceptions instead. This appears to be blocked on:
 --    https://github.com/purescript/purescript-exceptions/issues/5
-foreign import handleBenchmarkEXCEPTION ::
+foreign import handleBenchmarkException ::
   forall e a. String -> Int -> Eff (BenchEffects e) a -> Eff (BenchEffects e) a
 
 runBenchmarkFunction :: forall e a. Array a -> BenchmarkFunction a -> Eff (BenchEffects e) Stats
