@@ -21,5 +21,9 @@
     "purescript-node-buffer": "^0.1.0",
     "purescript-node-readline": "^0.2.0-rc.1",
     "purescript-datetime": "~0.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hdgarrood/purescript-benchotron.git"
   }
 }
