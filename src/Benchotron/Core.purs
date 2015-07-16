@@ -10,6 +10,7 @@ module Benchotron.Core
   , runBenchmark
   , runBenchmarkF
   , BenchM()
+  , runBenchM
   , BenchEffects()
   , BenchmarkResult()
   , ResultSeries()
@@ -27,11 +28,16 @@ import Data.Traversable (for)
 import Data.Date (Now())
 import Data.Date.Locale (Locale())
 import Control.Apply ((<*))
+import Control.Monad.State.Trans (StateT(), evalStateT)
+import Control.Monad.State.Class (get, put)
+import Control.Monad.Trans (lift)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (EXCEPTION(), Error(), catchException,
                                     throwException, message, error)
 import Node.FS (FS())
 import Control.Monad.Eff.Console (CONSOLE())
+import Control.Monad.Eff.Random  (RANDOM())
+import Test.QuickCheck.Gen (Gen(), GenState(), runGen)
 
 import Benchotron.StdIO
 import Benchotron.BenchmarkJS
@@ -59,29 +65,29 @@ import Benchotron.Utils
 -- | * `gen`: An Eff action which should produce a random input of the given
 -- |   argument size when executed.
 -- | * `functions`: An array of competing functions to be benchmarked.
-type BenchmarkF e a =
+type BenchmarkF a =
   { slug               :: String
   , title              :: String
   , sizes              :: Array Int
   , sizeInterpretation :: String
   , inputsPerSize      :: Int
-  , gen                :: Int -> Eff (BenchEffects e) a
+  , gen                :: Int -> Gen a
   , functions          :: Array (BenchmarkFunction a)
   }
 
 -- This is only necessary because psc doesn't support partially applied type
 -- synonyms.
-newtype BenchmarkFF e a = BenchmarkFF (BenchmarkF e a)
+newtype BenchmarkFF a = BenchmarkFF (BenchmarkF a)
 
-newtype Benchmark e = Benchmark (Exists (BenchmarkFF e))
+newtype Benchmark = Benchmark (Exists (BenchmarkFF))
 
-mkBenchmark :: forall e a. BenchmarkF e a -> Benchmark e
+mkBenchmark :: forall a. BenchmarkF a -> Benchmark
 mkBenchmark = Benchmark <<< mkExists <<< BenchmarkFF
 
-unpackBenchmark :: forall e r. (forall a. BenchmarkF e a -> r) -> Benchmark e -> r
+unpackBenchmark :: forall r. (forall a. BenchmarkF a -> r) -> Benchmark -> r
 unpackBenchmark f (Benchmark b) = runExists f' b
   where
-  f' :: forall a. BenchmarkFF e a -> r
+  f' :: forall a. BenchmarkFF a -> r
   f' (BenchmarkFF b') = f b'
 
 newtype BenchmarkFunction a = BenchmarkFunction (Exists (BenchmarkFunctionF a))
@@ -112,10 +118,22 @@ getName (BenchmarkFunction f) = runExists go f
   go :: forall b. BenchmarkFunctionF a b -> String
   go (BenchmarkFunctionF o) = o.name
 
-type BenchM e a = Eff (BenchEffects e) a
+type BenchM e a = StateT GenState (Eff (BenchEffects e)) a
+
+runBenchM :: forall e a. BenchM e a -> GenState -> Eff (BenchEffects e) a
+runBenchM = evalStateT
+
+-- | Use the given generator to generate a random value, using (and modifying)
+-- | the state of the BenchM computation.
+stepGen :: forall e a. Gen a -> BenchM e a
+stepGen gen = do
+  st <- get
+  let out = runGen gen st
+  put out.state
+  return out.value
 
 runBenchmark :: forall e.
-  Benchmark e ->
+  Benchmark ->
   -- ^ The Benchmark to be run.
   (Int -> Int -> BenchM e Unit) ->
   -- ^ Callback for when the size changes; the arguments are current size index
@@ -124,7 +142,7 @@ runBenchmark :: forall e.
 runBenchmark = unpackBenchmark runBenchmarkF
 
 runBenchmarkF :: forall e a.
-  BenchmarkF e a ->
+  BenchmarkF a ->
   -- ^ The Benchmark to be run.
   (Int -> Int -> BenchM e Unit) ->
   -- ^ Callback for when the size changes; the arguments are current size index
@@ -133,12 +151,14 @@ runBenchmarkF :: forall e a.
 runBenchmarkF benchmark onChange = do
   results <- for (withIndices benchmark.sizes) $ \(Tuple idx size) -> do
     onChange idx size
-    inputs   <- replicateM benchmark.inputsPerSize (benchmark.gen size)
+    let getAnInput = stepGen $ benchmark.gen size
+    inputs   <- replicateM benchmark.inputsPerSize getAnInput
     allStats <- for benchmark.functions $ \function -> do
                   let name = getName function
-                  handleBenchmarkException name size $ do
-                    stats <- runBenchmarkFunction inputs function
-                    return { name: name, stats: stats }
+                  lift $
+                    handleBenchmarkException name size $ do
+                      stats <- runBenchmarkFunction inputs function
+                      return { name: name, stats: stats }
 
     return { size: size, allStats: allStats }
 
@@ -176,6 +196,7 @@ type BenchEffects e
     , now       :: Now
     , locale    :: Locale
     , console   :: CONSOLE
+    , random    :: RANDOM
     , benchmark :: BENCHMARK
     | e
     )

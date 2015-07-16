@@ -24,7 +24,7 @@ foreign import benchmarkJS  :: BenchmarkJS
 -- | your functions to Strings, and then using 'eval' in the tests. I'm not quite
 -- | sure why it does this, but it breaks things, due to imported modules no
 -- | longer being in scope :(
---
+-- |
 -- | Here, we monkey-patch the Benchmark object to fool the library into thinking
 -- | function decompilation is not supported, which should hopefully stop this
 -- | from happening.

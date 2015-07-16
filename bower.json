@@ -15,6 +15,8 @@
     "purescript-identity": "^0.4.0",
     "purescript-profunctor": "^0.3.0",
     "purescript-strings": "^0.5.0",
+    "purescript-quickcheck": "^0.6.0",
+    "purescript-transformers": "^0.6.0",
     "purescript-foldable-traversable": "^0.4.0",
     "purescript-exceptions": "^0.3.0",
     "purescript-node-fs": "^0.7.1",

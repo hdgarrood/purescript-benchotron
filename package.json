@@ -1,0 +1,10 @@
+{
+  "private": "true",
+  "dependencies": {
+    "benchmark": "~1.0.0",
+    "microtime": "~1.2.0"
+  },
+  "scripts": {
+    "build": "pulp build && pulp docs"
+  }
+}
