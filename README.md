@@ -1,5 +1,7 @@
 # purescript-benchotron
 
+[![Build Status](https://travis-ci.org/hdgarrood/purescript-benchotron.svg?branch=master)](https://travis-ci.org/hdgarrood/purescript-benchotron)
+
 Straightforward benchmarking via [Benchmark.js][]. I am sorry about the name
 (purescript-benchmark was taken).
 
