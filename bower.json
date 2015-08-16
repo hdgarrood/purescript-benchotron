@@ -10,19 +10,19 @@
     "output"
   ],
   "dependencies": {
-    "purescript-arrays": "^0.4.0",
+    "purescript-arrays": "^0.4.2",
     "purescript-exists": "^0.2.0",
     "purescript-identity": "^0.4.0",
     "purescript-profunctor": "^0.3.0",
     "purescript-strings": "^0.7.0",
-    "purescript-quickcheck": "^0.6.0",
+    "purescript-quickcheck": "^0.9.0",
     "purescript-transformers": "^0.6.0",
     "purescript-foldable-traversable": "^0.4.0",
     "purescript-exceptions": "^0.3.0",
-    "purescript-node-fs": "^0.7.1",
+    "purescript-node-fs": "^0.8.1",
     "purescript-node-buffer": "^0.1.0",
-    "purescript-node-readline": "^0.2.0-rc.1",
-    "purescript-datetime": "~0.6.0"
+    "purescript-node-readline": "^0.3.1",
+    "purescript-datetime": "^0.6.0"
   },
   "repository": {
     "type": "git",
