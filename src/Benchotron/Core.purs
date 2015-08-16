@@ -129,8 +129,8 @@ stepGen :: forall e a. Gen a -> BenchM e a
 stepGen gen = do
   st <- get
   let out = runGen gen st
-  put out.state
-  return out.value
+  put $ snd out
+  return $ fst out
 
 runBenchmark :: forall e.
   Benchmark ->
