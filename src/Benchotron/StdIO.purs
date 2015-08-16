@@ -23,7 +23,7 @@ question :: forall e.
   Eff (console :: CONSOLE | e) Unit
 question q callback = do
   i <- createInterface noCompletion
-  setLineHandler (\s -> closeInterface i >>= const (callback s)) i
+  setLineHandler i (\s -> closeInterface i >>= const (callback s))
   setPrompt q (S.length q) i
   prompt i
   return unit
