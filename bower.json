@@ -9,23 +9,23 @@
     "bower_components",
     "output"
   ],
-  "dependencies": {
-    "purescript-arrays": "^0.4.2",
-    "purescript-exists": "^0.2.0",
-    "purescript-identity": "^0.4.0",
-    "purescript-profunctor": "^0.3.0",
-    "purescript-strings": "^0.7.0",
-    "purescript-quickcheck": "^0.11.0",
-    "purescript-transformers": "^0.7.1",
-    "purescript-foldable-traversable": "^0.4.0",
-    "purescript-exceptions": "^0.3.0",
-    "purescript-node-fs": "^0.8.1",
-    "purescript-node-buffer": "^0.1.0",
-    "purescript-node-readline": "^0.3.1",
-    "purescript-datetime": "^0.9.0"
-  },
   "repository": {
     "type": "git",
     "url": "git://github.com/hdgarrood/purescript-benchotron.git"
+  },
+  "dependencies": {
+    "purescript-arrays": "~0.4.3",
+    "purescript-exists": "~0.2.0",
+    "purescript-identity": "~0.4.1",
+    "purescript-profunctor": "~0.3.1",
+    "purescript-strings": "~0.7.0",
+    "purescript-quickcheck": "~0.12.0",
+    "purescript-transformers": "~0.8.2",
+    "purescript-foldable-traversable": "~0.4.1",
+    "purescript-exceptions": "~0.3.1",
+    "purescript-node-fs": "~0.9.1",
+    "purescript-node-buffer": "~0.2.0",
+    "purescript-node-readline": "~0.3.1",
+    "purescript-datetime": "~0.9.0"
   }
 }
