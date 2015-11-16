@@ -26,7 +26,7 @@ BenchM instead?
 #### `showOptions`
 
 ``` purescript
-showOptions :: forall e. Array Benchmark -> Array String
+showOptions :: Array Benchmark -> Array String
 ```
 
 #### `runBenchmarkConsole`
