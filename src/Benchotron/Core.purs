@@ -34,6 +34,7 @@ import Control.Monad.Trans (lift)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (EXCEPTION(), Error(), catchException,
                                     throwException, message, error)
+import Control.Monad.Eff.Exception.Unsafe (unsafeThrow)
 import Node.FS (FS())
 import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Random  (RANDOM())
@@ -234,4 +235,5 @@ rejig results = map toSeries names
                           }) results
     }
   the [x] = x
+  the _ = unsafeThrow "Benchotron.Core.the: invalid input"
 

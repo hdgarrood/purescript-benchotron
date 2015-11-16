@@ -72,7 +72,7 @@ runSuite bs = do
             Just b  -> go b
             Nothing -> stdoutWrite "No such benchmark.\n" >> questionLoop
 
-showOptions :: forall e. Array Benchmark -> Array String
+showOptions :: Array Benchmark -> Array String
 showOptions = map (showOption <<< second getSlugAndTitle) <<< withIndices
   where
   getSlugAndTitle =
