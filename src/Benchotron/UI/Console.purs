@@ -9,19 +9,19 @@ import Data.Profunctor.Strong (second, (&&&))
 import qualified Data.Array as A
 import Data.Int (fromNumber)
 import Data.String (joinWith)
-import Data.Date (now, Now())
-import Data.Date.Locale (toLocaleTimeString, Locale())
+import Data.Date (now)
+import Data.Date.Locale (toLocaleTimeString)
 import Test.QuickCheck.Gen (GenState())
 import Test.QuickCheck.LCG (runSeed, randomSeed)
 import Control.Monad.Trans (lift)
 import Control.Monad.State.Class (get)
 import Control.Monad (when)
 import Control.Monad.Eff
-import Control.Monad.Eff.Random (RANDOM(), randomInt)
+import Control.Monad.Eff.Random (RANDOM())
 import Node.FS.Sync (writeTextFile, mkdir, stat, exists)
 import Node.FS.Stats (isDirectory)
 import Node.Encoding (Encoding(..))
-import Global (readInt, isNaN)
+import Global (readInt)
 
 import Benchotron.Core
 import Benchotron.StdIO

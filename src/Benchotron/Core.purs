@@ -19,28 +19,23 @@ module Benchotron.Core
 
 import Prelude
 import Data.Exists
-import Data.Identity
 import Data.Tuple
 import Data.Array (filter, (..), length, replicateM, zip)
 import Data.Array.Unsafe (head)
-import Data.String (joinWith)
 import Data.Traversable (for)
 import Data.Date (Now())
 import Data.Date.Locale (Locale())
-import Control.Apply ((<*))
 import Control.Monad.State.Trans (StateT(), evalStateT)
 import Control.Monad.State.Class (get, put)
 import Control.Monad.Trans (lift)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (EXCEPTION(), Error(), catchException,
-                                    throwException, message, error)
+import Control.Monad.Eff.Exception (EXCEPTION())
 import Control.Monad.Eff.Exception.Unsafe (unsafeThrow)
 import Node.FS (FS())
 import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Random  (RANDOM())
 import Test.QuickCheck.Gen (Gen(), GenState(), runGen)
 
-import Benchotron.StdIO
 import Benchotron.BenchmarkJS
 import Benchotron.Utils
 
