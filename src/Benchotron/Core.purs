@@ -39,10 +39,8 @@ import Test.QuickCheck.Gen (Gen(), GenState(), runGen)
 import Benchotron.BenchmarkJS
 import Benchotron.Utils
 
--- | A value representing a benchmark to be performed. The type parameter 'e'
--- | is provided to allow you to supply a random value generator with arbitrary
--- | effects, if you need to. The type parameter 'a' is the type of the input
--- | to each of the competing functions in the benchmark.
+-- | A value representing a benchmark to be performed. The type parameter is
+-- | the type of the input to each of the competing functions in the benchmark.
 -- |
 -- | **Attributes**
 -- |
@@ -58,8 +56,8 @@ import Benchotron.Utils
 -- |   input size. Often it's acceptable to set this to 1. By using higher
 -- |   values, you can have more confidence in your results; however, your
 -- |   benchmarks will also take much longer to run.
--- | * `gen`: An Eff action which should produce a random input of the given
--- |   argument size when executed.
+-- | * `gen`: a QuickCheck generator, which should produce a random input of
+-- |   the given argument size when executed.
 -- | * `functions`: An array of competing functions to be benchmarked.
 type BenchmarkF a =
   { slug               :: String
