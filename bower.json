@@ -1,9 +1,6 @@
 {
   "name": "purescript-benchotron",
-  "version": "3.0.3",
-  "moduleType": [
-    "node"
-  ],
+  "license": "MIT",
   "ignore": [
     "**/.*",
     "node_modules",
