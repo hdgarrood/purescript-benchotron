@@ -18,13 +18,12 @@ module Benchotron.Core
   ) where
 
 import Prelude
-import Data.Exists
-import Data.Tuple
+import Data.Exists (Exists, runExists, mkExists)
+import Data.Tuple (Tuple(..), fst, snd)
 import Data.Array (filter, (..), length, zip)
 import Data.Array.Partial (head)
 import Data.Traversable (for)
 import Data.Unfoldable (replicateA)
-import Data.DateTime.Locale (Locale())
 import Control.Monad.State.Trans (StateT(), evalStateT)
 import Control.Monad.State.Class (get, put)
 import Control.Monad.Trans (lift)
@@ -35,6 +34,7 @@ import Control.Monad.Eff.Now (NOW())
 import Node.FS (FS())
 import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Random  (RANDOM())
+import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck.Gen (Gen(), GenState(), runGen)
 
 import Benchotron.BenchmarkJS
@@ -219,7 +219,7 @@ rejig :: IntermediateResult -> Array ResultSeries
 rejig [] = []
 rejig results = map toSeries names
   where
-  r = head results
+  r = unsafePartial $ head results
   names = map _.name r.allStats
   toSeries name =
     { name: name
