@@ -1,8 +1,6 @@
 /* global exports */
 "use strict";
 
-// module Benchotron.Core
-
 exports.handleBenchmarkException = function (name) {
   return function (size) {
     return function (innerAction) {
