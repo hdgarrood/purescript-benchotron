@@ -20,17 +20,18 @@ module Benchotron.Core
 import Prelude
 import Data.Exists
 import Data.Tuple
-import Data.Array (filter, (..), length, replicateM, zip)
-import Data.Array.Unsafe (head)
+import Data.Array (filter, (..), length, zip)
+import Data.Array.Partial (head)
 import Data.Traversable (for)
-import Data.Date (Now())
-import Data.Date.Locale (Locale())
+import Data.Unfoldable (replicateA)
+import Data.DateTime.Locale (Locale())
 import Control.Monad.State.Trans (StateT(), evalStateT)
 import Control.Monad.State.Class (get, put)
 import Control.Monad.Trans (lift)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (EXCEPTION())
 import Control.Monad.Eff.Exception.Unsafe (unsafeThrow)
+import Control.Monad.Eff.Now (NOW())
 import Node.FS (FS())
 import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Random  (RANDOM())
@@ -124,7 +125,7 @@ stepGen gen = do
   st <- get
   let out = runGen gen st
   put $ snd out
-  return $ fst out
+  pure $ fst out
 
 runBenchmark :: forall e.
   Benchmark ->
@@ -146,18 +147,18 @@ runBenchmarkF benchmark onChange = do
   results <- for (withIndices benchmark.sizes) $ \(Tuple idx size) -> do
     onChange idx size
     let getAnInput = stepGen $ benchmark.gen size
-    inputs   <- replicateM benchmark.inputsPerSize getAnInput
+    inputs   <- replicateA benchmark.inputsPerSize getAnInput
     allStats <- for benchmark.functions $ \function -> do
                   let name = getName function
                   lift $
                     handleBenchmarkException name size $ do
                       stats <- runBenchmarkFunction inputs function
-                      return { name: name, stats: stats }
+                      pure { name: name, stats: stats }
 
-    return { size: size, allStats: allStats }
+    pure { size: size, allStats: allStats }
 
   let series = rejig results
-  return
+  pure
     { slug: benchmark.slug
     , title: benchmark.title
     , sizeInterpretation: benchmark.sizeInterpretation
@@ -187,8 +188,7 @@ runBenchmarkFunction inputs (BenchmarkFunction function') =
 type BenchEffects e
   = ( err       :: EXCEPTION
     , fs        :: FS
-    , now       :: Now
-    , locale    :: Locale
+    , now       :: NOW
     , console   :: CONSOLE
     , random    :: RANDOM
     , benchmark :: BENCHMARK
@@ -229,4 +229,3 @@ rejig results = map toSeries names
     }
   the [x] = x
   the _ = unsafeThrow "Benchotron.Core.the: invalid input"
-

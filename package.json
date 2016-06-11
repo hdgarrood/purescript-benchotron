@@ -1,12 +1,12 @@
 {
   "private": "true",
   "dependencies": {
-    "benchmark": "~1.0.0",
-    "microtime": "~1.2.0",
-    "pulp": "~4.3.0"
+    "benchmark": "^2.1.0",
+    "microtime": "^2.1.1",
+    "pulp": "^9.0.1"
   },
   "scripts": {
-    "postinstall": "pulp dep install",
+    "postinstall": "bower install",
     "build": "pulp build && pulp docs",
     "test": "mkdir -p tmp && pulp build -I example -O --to tmp/main.js && (echo '*' | node tmp/main.js)"
   }

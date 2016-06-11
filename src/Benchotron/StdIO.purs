@@ -6,7 +6,7 @@ module Benchotron.StdIO
   ) where
 
 import Prelude
-import qualified Data.String as S
+import Data.String as S
 import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff (Eff())
 import Node.ReadLine
@@ -26,7 +26,7 @@ question q callback = do
   setLineHandler i (\s -> closeInterface i >>= const (callback s))
   setPrompt q (S.length q) i
   prompt i
-  return unit
+  pure unit
 
 foreign import closeInterface ::
   forall e. Interface -> Eff (console :: CONSOLE | e) Unit
