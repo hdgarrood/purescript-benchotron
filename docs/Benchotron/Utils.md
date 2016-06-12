@@ -18,12 +18,16 @@ toAny :: forall a. a -> Any
 unsafeJsonStringify :: forall a. a -> String
 ```
 
+#### `bindConst`
+
+``` purescript
+bindConst :: forall m a b. Bind m => m a -> m b -> m b
+```
+
 #### `(>>)`
 
 ``` purescript
-(>>) :: forall m a b. (Bind m) => m a -> m b -> m b
+infixl 4 bindConst as >>
 ```
-
-_left-associative / precedence -1_
 
 

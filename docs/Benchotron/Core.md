@@ -6,10 +6,8 @@
 type BenchmarkF a = { slug :: String, title :: String, sizes :: Array Int, sizeInterpretation :: String, inputsPerSize :: Int, gen :: Int -> Gen a, functions :: Array (BenchmarkFunction a) }
 ```
 
-A value representing a benchmark to be performed. The type parameter 'e'
-is provided to allow you to supply a random value generator with arbitrary
-effects, if you need to. The type parameter 'a' is the type of the input
-to each of the competing functions in the benchmark.
+A value representing a benchmark to be performed. The type parameter is
+the type of the input to each of the competing functions in the benchmark.
 
 **Attributes**
 
@@ -25,8 +23,8 @@ to each of the competing functions in the benchmark.
   input size. Often it's acceptable to set this to 1. By using higher
   values, you can have more confidence in your results; however, your
   benchmarks will also take much longer to run.
-* `gen`: An Eff action which should produce a random input of the given
-  argument size when executed.
+* `gen`: a QuickCheck generator, which should produce a random input of
+  the given argument size when executed.
 * `functions`: An array of competing functions to be benchmarked.
 
 #### `Benchmark`
@@ -100,7 +98,7 @@ runBenchmarkF :: forall e a. BenchmarkF a -> (Int -> Int -> BenchM e Unit) -> Be
 #### `BenchEffects`
 
 ``` purescript
-type BenchEffects e = (err :: EXCEPTION, fs :: FS, now :: Now, locale :: Locale, console :: CONSOLE, random :: RANDOM, benchmark :: BENCHMARK | e)
+type BenchEffects e = (err :: EXCEPTION, fs :: FS, now :: NOW, console :: CONSOLE, random :: RANDOM, benchmark :: BENCHMARK, readline :: READLINE | e)
 ```
 
 #### `BenchmarkResult`
