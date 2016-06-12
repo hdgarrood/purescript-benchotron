@@ -2,8 +2,8 @@
 module Benchotron.BenchmarkJS where
 
 import Prelude
-import Control.Monad.Eff
-import Benchotron.Utils
+import Control.Monad.Eff (Eff)
+import Benchotron.Utils (Any)
 
 foreign import data BenchmarkJS :: *
 foreign import data BENCHMARK :: !
