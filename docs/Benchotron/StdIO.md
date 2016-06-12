@@ -15,7 +15,7 @@ stderrWrite :: forall e. String -> Eff (console :: CONSOLE | e) Unit
 #### `question`
 
 ``` purescript
-question :: forall e. String -> (String -> Eff (console :: CONSOLE | e) Unit) -> Eff (console :: CONSOLE | e) Unit
+question :: forall e. String -> (String -> Eff (readline :: READLINE, console :: CONSOLE, err :: EXCEPTION | e) Unit) -> Eff (readline :: READLINE, console :: CONSOLE, err :: EXCEPTION | e) Unit
 ```
 
 
