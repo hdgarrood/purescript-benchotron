@@ -2,8 +2,8 @@
 module Benchotron.Utils where
 
 import Prelude
-import Data.Identity
-import Data.Exists
+import Data.Identity (Identity(..))
+import Data.Exists (Exists, mkExists)
 
 type Any = Exists Identity
 

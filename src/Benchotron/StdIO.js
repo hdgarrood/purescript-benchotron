@@ -2,8 +2,6 @@
 /* global process */
 "use strict";
 
-// module Benchotron.StdIO
-
 exports.stdoutWrite = function (str) {
   return function () {
     process.stdout.write(str);

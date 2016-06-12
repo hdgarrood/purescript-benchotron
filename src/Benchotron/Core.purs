@@ -32,13 +32,15 @@ import Control.Monad.Eff.Exception (EXCEPTION())
 import Control.Monad.Eff.Exception.Unsafe (unsafeThrow)
 import Control.Monad.Eff.Now (NOW())
 import Node.FS (FS())
+import Node.ReadLine (READLINE)
 import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Random  (RANDOM())
 import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck.Gen (Gen(), GenState(), runGen)
 
-import Benchotron.BenchmarkJS
-import Benchotron.Utils
+import Benchotron.BenchmarkJS (Stats, BENCHMARK, benchmarkJS, runBenchmarkImpl, 
+                               monkeyPatchBenchmark)
+import Benchotron.Utils (Any, toAny)
 
 -- | A value representing a benchmark to be performed. The type parameter is
 -- | the type of the input to each of the competing functions in the benchmark.
@@ -192,6 +194,7 @@ type BenchEffects e
     , console   :: CONSOLE
     , random    :: RANDOM
     , benchmark :: BENCHMARK
+    , readline  :: READLINE
     | e
     )
 

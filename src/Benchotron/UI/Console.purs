@@ -2,19 +2,20 @@
 module Benchotron.UI.Console where
 
 import Prelude
-import Data.Tuple
-import Data.Maybe
+import Data.Tuple (Tuple(..))
+import Data.Maybe (Maybe(..))
 import Data.Foldable (traverse_)
 import Data.Profunctor.Strong (second, (&&&))
 import Data.Array as A
 import Data.Int (fromNumber)
 import Data.String (joinWith)
+import Data.JSDate as JSD
+import Data.DateTime.Instant as DDI
 import Test.QuickCheck.Gen (GenState())
 import Test.QuickCheck.LCG (runSeed, randomSeed)
 import Control.Monad.Trans (lift)
 import Control.Monad.State.Class (get)
-import Control.Monad (when)
-import Control.Monad.Eff
+import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Now (now)
 import Control.Monad.Eff.Random (RANDOM())
 import Node.FS.Sync (writeTextFile, mkdir, stat, exists)
@@ -22,9 +23,10 @@ import Node.FS.Stats (isDirectory)
 import Node.Encoding (Encoding(..))
 import Global (readInt)
 
-import Benchotron.Core
-import Benchotron.StdIO
-import Benchotron.Utils
+import Benchotron.Core (BenchmarkResult, BenchEffects, Benchmark, BenchM, 
+                        runBenchM, runBenchmark, unpackBenchmark)
+import Benchotron.StdIO (stdoutWrite, stderrWrite, question)
+import Benchotron.Utils (unsafeJsonStringify, (>>))
 
 data Answer = All | One Int
 
@@ -95,7 +97,8 @@ runBenchmarkConsole benchmark = do
     noteTime \t -> "Finished at: " <> t <> "\n"
   pure r
   where
-  noteTime f = now >>= show >>= (stderrWrite <<< f)
+  noteTime f = nowString >>= (stderrWrite <<< f)
+  nowString = JSD.toTimeString <$> JSD.fromDateTime <$> DDI.toDateTime <$> now
   countSizes = A.length $ unpackBenchmark _.sizes benchmark
   clearLine = "\r\ESC[K"
   progress idx size =
