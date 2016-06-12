@@ -23,7 +23,7 @@
     "purescript-exceptions": "^1.0.0",
     "purescript-node-fs": "^1.0.0",
     "purescript-node-buffer": "^1.0.0",
-    "purescript-node-readline": "https://github.com/kika/purescript-node-readline.git#3140f36bf7927eba2fa894a0a150a7795a3ed779",
+    "purescript-node-readline": "^1.0.0",
     "purescript-datetime": "^1.0.0",
     "purescript-now": "^1.0.0"
   }
