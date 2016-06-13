@@ -1,7 +1,7 @@
 language: node_js
-sudo: false
-node_js:
-  - 5.11.0
+dist: trusty
+sudo: required
+node_js: 6
 env:
   - CXX=g++-4.9 PATH=$HOME/purescript:$PATH
 addons:
