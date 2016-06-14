@@ -26,7 +26,7 @@ import Global (readInt)
 import Benchotron.Core (BenchmarkResult, BenchEffects, Benchmark, BenchM, 
                         runBenchM, runBenchmark, unpackBenchmark)
 import Benchotron.StdIO (stdoutWrite, stderrWrite, question)
-import Benchotron.Utils (unsafeJsonStringify, (>>))
+import Benchotron.Utils (unsafeJsonStringify)
 
 data Answer = All | One Int
 
@@ -66,12 +66,12 @@ runSuite bs = do
   questionLoop =
     question "Enter a number, or enter '*' to run all benchmarks: " \answer ->
       case parseAnswer answer of
-        Nothing -> stdoutWrite "Unrecognised input.\n" >> questionLoop
+        Nothing -> stdoutWrite "Unrecognised input.\n" *> questionLoop
         Just All -> traverse_ go bs
         Just (One i) ->
           case bs A.!! (i - 1) of
             Just b  -> go b
-            Nothing -> stdoutWrite "No such benchmark.\n" >> questionLoop
+            Nothing -> stdoutWrite "No such benchmark.\n" *> questionLoop
 
 showOptions :: Array Benchmark -> Array String
 showOptions = map (showOption <<< second getSlugAndTitle) <<< withIndices
