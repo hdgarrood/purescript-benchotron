@@ -22,8 +22,8 @@ foreign import stderrWrite ::
 question :: forall e.
   String ->
   (String -> 
-   Eff (readline::READLINE, console :: CONSOLE, err::EXCEPTION | e) Unit) ->
-  Eff (readline::READLINE, console :: CONSOLE, err::EXCEPTION | e) Unit
+   Eff (readline :: READLINE, console :: CONSOLE, err :: EXCEPTION | e) Unit) ->
+  Eff (readline :: READLINE, console :: CONSOLE, err :: EXCEPTION | e) Unit
 question q callback = do
   i <- createConsoleInterface noCompletion
   setLineHandler i (\s -> close i >>= const (callback s))
