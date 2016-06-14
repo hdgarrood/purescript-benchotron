@@ -2,30 +2,31 @@
 module Benchotron.UI.Console where
 
 import Prelude
-import Data.Tuple
-import Data.Maybe
+import Data.Tuple (Tuple(..))
+import Data.Maybe (Maybe(..))
 import Data.Foldable (traverse_)
 import Data.Profunctor.Strong (second, (&&&))
-import qualified Data.Array as A
+import Data.Array as A
 import Data.Int (fromNumber)
 import Data.String (joinWith)
-import Data.Date (now)
-import Data.Date.Locale (toLocaleTimeString)
+import Data.JSDate as JSD
+import Data.DateTime.Instant as DDI
 import Test.QuickCheck.Gen (GenState())
 import Test.QuickCheck.LCG (runSeed, randomSeed)
 import Control.Monad.Trans (lift)
 import Control.Monad.State.Class (get)
-import Control.Monad (when)
-import Control.Monad.Eff
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Now (now)
 import Control.Monad.Eff.Random (RANDOM())
 import Node.FS.Sync (writeTextFile, mkdir, stat, exists)
 import Node.FS.Stats (isDirectory)
 import Node.Encoding (Encoding(..))
 import Global (readInt)
 
-import Benchotron.Core
-import Benchotron.StdIO
-import Benchotron.Utils
+import Benchotron.Core (BenchmarkResult, BenchEffects, Benchmark, BenchM, 
+                        runBenchM, runBenchmark, unpackBenchmark)
+import Benchotron.StdIO (stdoutWrite, stderrWrite, question)
+import Benchotron.Utils (unsafeJsonStringify)
 
 data Answer = All | One Int
 
@@ -58,19 +59,19 @@ runSuite bs = do
     ex <- exists dir
     if ex
        then isDirectory <$> stat dir
-       else return false
+       else pure false
 
   slug = unpackBenchmark _.slug
 
   questionLoop =
     question "Enter a number, or enter '*' to run all benchmarks: " \answer ->
       case parseAnswer answer of
-        Nothing -> stdoutWrite "Unrecognised input.\n" >> questionLoop
+        Nothing -> stdoutWrite "Unrecognised input.\n" *> questionLoop
         Just All -> traverse_ go bs
         Just (One i) ->
           case bs A.!! (i - 1) of
             Just b  -> go b
-            Nothing -> stdoutWrite "No such benchmark.\n" >> questionLoop
+            Nothing -> stdoutWrite "No such benchmark.\n" *> questionLoop
 
 showOptions :: Array Benchmark -> Array String
 showOptions = map (showOption <<< second getSlugAndTitle) <<< withIndices
@@ -94,9 +95,10 @@ runBenchmarkConsole benchmark = do
   lift $ do
     stderrWrite "\n"
     noteTime \t -> "Finished at: " <> t <> "\n"
-  return r
+  pure r
   where
-  noteTime f = now >>= toLocaleTimeString >>= (stderrWrite <<< f)
+  noteTime f = nowString >>= (stderrWrite <<< f)
+  nowString = (JSD.toTimeString<<<JSD.fromDateTime<<<DDI.toDateTime) <$> now
   countSizes = A.length $ unpackBenchmark _.sizes benchmark
   clearLine = "\r\ESC[K"
   progress idx size =
