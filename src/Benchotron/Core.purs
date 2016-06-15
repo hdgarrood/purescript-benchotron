@@ -18,26 +18,29 @@ module Benchotron.Core
   ) where
 
 import Prelude
-import Data.Exists
-import Data.Tuple
-import Data.Array (filter, (..), length, replicateM, zip)
-import Data.Array.Unsafe (head)
+import Data.Exists (Exists, runExists, mkExists)
+import Data.Tuple (Tuple(..), fst, snd)
+import Data.Array (filter, (..), length, zip)
+import Data.Array.Partial (head)
 import Data.Traversable (for)
-import Data.Date (Now())
-import Data.Date.Locale (Locale())
+import Data.Unfoldable (replicateA)
 import Control.Monad.State.Trans (StateT(), evalStateT)
 import Control.Monad.State.Class (get, put)
 import Control.Monad.Trans (lift)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (EXCEPTION())
 import Control.Monad.Eff.Exception.Unsafe (unsafeThrow)
+import Control.Monad.Eff.Now (NOW())
 import Node.FS (FS())
+import Node.ReadLine (READLINE)
 import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Random  (RANDOM())
+import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck.Gen (Gen(), GenState(), runGen)
 
-import Benchotron.BenchmarkJS
-import Benchotron.Utils
+import Benchotron.BenchmarkJS (Stats, BENCHMARK, benchmarkJS, runBenchmarkImpl, 
+                               monkeyPatchBenchmark)
+import Benchotron.Utils (Any, toAny)
 
 -- | A value representing a benchmark to be performed. The type parameter is
 -- | the type of the input to each of the competing functions in the benchmark.
@@ -124,7 +127,7 @@ stepGen gen = do
   st <- get
   let out = runGen gen st
   put $ snd out
-  return $ fst out
+  pure $ fst out
 
 runBenchmark :: forall e.
   Benchmark ->
@@ -146,18 +149,18 @@ runBenchmarkF benchmark onChange = do
   results <- for (withIndices benchmark.sizes) $ \(Tuple idx size) -> do
     onChange idx size
     let getAnInput = stepGen $ benchmark.gen size
-    inputs   <- replicateM benchmark.inputsPerSize getAnInput
+    inputs   <- replicateA benchmark.inputsPerSize getAnInput
     allStats <- for benchmark.functions $ \function -> do
                   let name = getName function
                   lift $
                     handleBenchmarkException name size $ do
                       stats <- runBenchmarkFunction inputs function
-                      return { name: name, stats: stats }
+                      pure { name: name, stats: stats }
 
-    return { size: size, allStats: allStats }
+    pure { size: size, allStats: allStats }
 
   let series = rejig results
-  return
+  pure
     { slug: benchmark.slug
     , title: benchmark.title
     , sizeInterpretation: benchmark.sizeInterpretation
@@ -187,11 +190,11 @@ runBenchmarkFunction inputs (BenchmarkFunction function') =
 type BenchEffects e
   = ( err       :: EXCEPTION
     , fs        :: FS
-    , now       :: Now
-    , locale    :: Locale
+    , now       :: NOW
     , console   :: CONSOLE
     , random    :: RANDOM
     , benchmark :: BENCHMARK
+    , readline  :: READLINE
     | e
     )
 
@@ -219,7 +222,7 @@ rejig :: IntermediateResult -> Array ResultSeries
 rejig [] = []
 rejig results = map toSeries names
   where
-  r = head results
+  r = unsafePartial $ head results
   names = map _.name r.allStats
   toSeries name =
     { name: name
@@ -229,4 +232,3 @@ rejig results = map toSeries names
     }
   the [x] = x
   the _ = unsafeThrow "Benchotron.Core.the: invalid input"
-

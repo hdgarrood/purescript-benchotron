@@ -2,8 +2,6 @@
 /* global require */
 "use strict";
 
-// module Benchotron.BenchmarkJS
-
 exports.benchmarkJS = require('benchmark');
 
 exports.monkeyPatchBenchmark = function (b) {
