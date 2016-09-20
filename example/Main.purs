@@ -1,14 +1,22 @@
 module Main where
 
 import Prelude
+import Benchotron.BenchmarkJS (BENCHMARK)
+import Benchotron.Core (Benchmark, benchFn, mkBenchmark)
+import Benchotron.UI.Console (runSuite)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (CONSOLE)
+import Control.Monad.Eff.Exception (EXCEPTION)
+import Control.Monad.Eff.Now (NOW)
+import Control.Monad.Eff.Random (RANDOM)
 import Data.Array ((..))
 import Data.Foldable (foldMap, foldr)
 import Data.Monoid.Additive (Additive(..), runAdditive)
 import Data.Monoid.Multiplicative (Multiplicative(..), runMultiplicative)
+import Node.FS (FS)
+import Node.ReadLine (READLINE)
 import Test.QuickCheck.Arbitrary (arbitrary)
 import Test.QuickCheck.Gen (vectorOf)
-import Benchotron.Core (Benchmark, benchFn, mkBenchmark)
-import Benchotron.UI.Console (runSuite)
 
 benchSum :: Benchmark
 benchSum = mkBenchmark
@@ -35,4 +43,6 @@ benchProduct = mkBenchmark
                , benchFn "foldMap" (runMultiplicative <<< foldMap Multiplicative)
                ]
   }
+
+main :: forall e. Eff ( err :: EXCEPTION, fs :: FS, now :: NOW, console :: CONSOLE, random :: RANDOM, benchmark :: BENCHMARK, readline :: READLINE | e) Unit
 main = runSuite [benchSum, benchProduct]
