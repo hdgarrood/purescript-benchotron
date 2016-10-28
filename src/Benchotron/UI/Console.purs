@@ -11,19 +11,19 @@ import Data.Int (fromNumber)
 import Data.String (joinWith)
 import Data.JSDate as JSD
 import Data.DateTime.Instant as DDI
-import Test.QuickCheck.Gen (GenState())
+import Test.QuickCheck.Gen (GenState)
 import Test.QuickCheck.LCG (runSeed, randomSeed)
-import Control.Monad.Trans (lift)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.State.Class (get)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Now (now)
-import Control.Monad.Eff.Random (RANDOM())
+import Control.Monad.Eff.Random (RANDOM)
 import Node.FS.Sync (writeTextFile, mkdir, stat, exists)
 import Node.FS.Stats (isDirectory)
 import Node.Encoding (Encoding(..))
 import Global (readInt)
 
-import Benchotron.Core (BenchmarkResult, BenchEffects, Benchmark, BenchM, 
+import Benchotron.Core (BenchmarkResult, BenchEffects, Benchmark, BenchM,
                         runBenchM, runBenchmark, unpackBenchmark)
 import Benchotron.StdIO (stdoutWrite, stderrWrite, question)
 import Benchotron.Utils (unsafeJsonStringify)

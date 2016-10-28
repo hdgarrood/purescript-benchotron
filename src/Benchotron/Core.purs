@@ -1,20 +1,20 @@
 
 module Benchotron.Core
-  ( Benchmark()
-  , BenchmarkF()
-  , BenchmarkFunction()
+  ( Benchmark
+  , BenchmarkF
+  , BenchmarkFunction
   , mkBenchmark
   , unpackBenchmark
   , benchFn
   , benchFn'
   , runBenchmark
   , runBenchmarkF
-  , BenchM()
+  , BenchM
   , runBenchM
-  , BenchEffects()
-  , BenchmarkResult()
-  , ResultSeries()
-  , DataPoint()
+  , BenchEffects
+  , BenchmarkResult
+  , ResultSeries
+  , DataPoint
   ) where
 
 import Prelude
@@ -24,21 +24,21 @@ import Data.Array (filter, (..), length, zip)
 import Data.Array.Partial (head)
 import Data.Traversable (for)
 import Data.Unfoldable (replicateA)
-import Control.Monad.State.Trans (StateT(), evalStateT)
+import Control.Monad.State.Trans (StateT, evalStateT)
 import Control.Monad.State.Class (get, put)
-import Control.Monad.Trans (lift)
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (EXCEPTION())
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Exception.Unsafe (unsafeThrow)
-import Control.Monad.Eff.Now (NOW())
-import Node.FS (FS())
+import Control.Monad.Eff.Now (NOW)
+import Node.FS (FS)
 import Node.ReadLine (READLINE)
-import Control.Monad.Eff.Console (CONSOLE())
-import Control.Monad.Eff.Random  (RANDOM())
+import Control.Monad.Eff.Console (CONSOLE)
+import Control.Monad.Eff.Random  (RANDOM)
 import Partial.Unsafe (unsafePartial)
-import Test.QuickCheck.Gen (Gen(), GenState(), runGen)
+import Test.QuickCheck.Gen (Gen, GenState, runGen)
 
-import Benchotron.BenchmarkJS (Stats, BENCHMARK, benchmarkJS, runBenchmarkImpl, 
+import Benchotron.BenchmarkJS (Stats, BENCHMARK, benchmarkJS, runBenchmarkImpl,
                                monkeyPatchBenchmark)
 import Benchotron.Utils (Any, toAny)
 

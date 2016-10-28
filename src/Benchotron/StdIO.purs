@@ -7,10 +7,10 @@ module Benchotron.StdIO
 
 import Prelude
 import Data.String as S
-import Control.Monad.Eff.Console (CONSOLE())
-import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Console (CONSOLE)
+import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Exception (EXCEPTION)
-import Node.ReadLine (Interface, READLINE, prompt, setPrompt, close, 
+import Node.ReadLine (Interface, READLINE, prompt, setPrompt, close,
                       setLineHandler, noCompletion, createConsoleInterface)
 
 foreign import stdoutWrite ::
@@ -21,7 +21,7 @@ foreign import stderrWrite ::
 
 question :: forall e.
   String ->
-  (String -> 
+  (String ->
    Eff (readline :: READLINE, console :: CONSOLE, err :: EXCEPTION | e) Unit) ->
   Eff (readline :: READLINE, console :: CONSOLE, err :: EXCEPTION | e) Unit
 question q callback = do
