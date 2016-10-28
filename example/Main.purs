@@ -1,13 +1,15 @@
 module Main where
 
 import Prelude
+import Control.Monad.Eff (Eff)
 import Data.Array ((..))
 import Data.Foldable (foldMap, foldr)
-import Data.Monoid.Additive (Additive(..), runAdditive)
-import Data.Monoid.Multiplicative (Multiplicative(..), runMultiplicative)
+import Data.Monoid.Additive (Additive(..))
+import Data.Monoid.Multiplicative (Multiplicative(..))
+import Data.Newtype (ala)
 import Test.QuickCheck.Arbitrary (arbitrary)
 import Test.QuickCheck.Gen (vectorOf)
-import Benchotron.Core (Benchmark, benchFn, mkBenchmark)
+import Benchotron.Core (Benchmark, BenchEffects, benchFn, mkBenchmark)
 import Benchotron.UI.Console (runSuite)
 
 benchSum :: Benchmark
@@ -19,7 +21,7 @@ benchSum = mkBenchmark
   , inputsPerSize: 1
   , gen: \n -> vectorOf n arbitrary
   , functions: [ benchFn "foldr" (foldr (+) 0)
-               , benchFn "foldMap" (runAdditive <<< foldMap Additive)
+               , benchFn "foldMap" (ala Additive foldMap)
                ]
   }
 
@@ -32,7 +34,8 @@ benchProduct = mkBenchmark
   , inputsPerSize: 1
   , gen: \n -> vectorOf n arbitrary
   , functions: [ benchFn "foldr" (foldr (*) 0)
-               , benchFn "foldMap" (runMultiplicative <<< foldMap Multiplicative)
+               , benchFn "foldMap" (ala Multiplicative foldMap)
                ]
   }
+main :: forall eff. Eff (BenchEffects eff) Unit
 main = runSuite [benchSum, benchProduct]
