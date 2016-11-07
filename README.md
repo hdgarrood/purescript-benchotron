@@ -15,15 +15,16 @@ measure. Start by creating some `Benchmark` values:
 module Main where
 
 import Prelude
-import Data.Array
-import Data.Foldable
-import Data.Monoid.Additive
-import Data.Monoid.Multiplicative
-import Control.Monad.Eff
+import Control.Monad.Eff (Eff)
+import Data.Array ((..))
+import Data.Foldable (foldMap, foldr)
+import Data.Monoid.Additive (Additive(..))
+import Data.Monoid.Multiplicative (Multiplicative(..))
+import Data.Newtype (ala)
 import Test.QuickCheck.Arbitrary (arbitrary)
 import Test.QuickCheck.Gen (vectorOf)
-import Benchotron.Core
-import Benchotron.UI.Console
+import Benchotron.Core (Benchmark, BenchEffects, benchFn, mkBenchmark)
+import Benchotron.UI.Console (runSuite)
 
 benchSum :: Benchmark
 benchSum = mkBenchmark
@@ -34,7 +35,7 @@ benchSum = mkBenchmark
   , inputsPerSize: 1
   , gen: \n -> vectorOf n arbitrary
   , functions: [ benchFn "foldr" (foldr (+) 0)
-               , benchFn "foldMap" (runAdditive <<< foldMap Additive)
+               , benchFn "foldMap" (ala Additive foldMap)
                ]
   }
 
@@ -47,10 +48,10 @@ benchProduct = mkBenchmark
   , inputsPerSize: 1
   , gen: \n -> vectorOf n arbitrary
   , functions: [ benchFn "foldr" (foldr (*) 1)
-               , benchFn "foldMap" (runMultiplicative <<< foldMap Multiplicative)
+               , benchFn "foldMap" (ala Multiplicative foldMap)
                ]
   }
-
+main :: forall eff. Eff (BenchEffects eff) Unit
 main = runSuite [benchSum, benchProduct]
 ```
 
