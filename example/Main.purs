@@ -33,7 +33,7 @@ benchProduct = mkBenchmark
   , sizeInterpretation: "Number of elements in the array"
   , inputsPerSize: 1
   , gen: \n -> vectorOf n arbitrary
-  , functions: [ benchFn "foldr" (foldr (*) 0)
+  , functions: [ benchFn "foldr" (foldr (*) 1)
                , benchFn "foldMap" (ala Multiplicative foldMap)
                ]
   }
