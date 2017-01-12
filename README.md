@@ -65,7 +65,8 @@ main = runSuite [benchSum, benchProduct]
 You can now generate SVG graphs of these results by visiting
 <http://harry.garrood.me/purescript-benchotron-svg-renderer>.
 
-Further information, such as the meaning of each of the attributes of a
-`Benchmark` value, is available in the [documentation](docs/).
+Further information, such as the meaning of each of the fields of a
+`Benchmark` value, is available in the
+[documentation on Pursuit](https://pursuit.purescript.org/packages/purescript-benchotron).
 
 [Benchmark.js]: http://benchmarkjs.com
