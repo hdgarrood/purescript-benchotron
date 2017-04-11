@@ -2,11 +2,11 @@
 module Benchotron.BenchmarkJS where
 
 import Prelude
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (kind Effect, Eff)
 import Benchotron.Utils (Any)
 
-foreign import data BenchmarkJS :: *
-foreign import data BENCHMARK :: !
+foreign import data BenchmarkJS :: Type
+foreign import data BENCHMARK :: Effect
 
 type Stats =
   { deviation :: Number
