@@ -188,7 +188,7 @@ runBenchmarkFunction inputs (BenchmarkFunction function') =
       runBenchmarkImpl benchmarkJS f
 
 type BenchEffects e
-  = ( err       :: EXCEPTION
+  = ( exception :: EXCEPTION
     , fs        :: FS
     , now       :: NOW
     , console   :: CONSOLE
