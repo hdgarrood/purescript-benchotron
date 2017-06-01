@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "purescript-arrays": "^4.0.1",
+    "purescript-exceptions": "matthewleon/purescript-exceptions#rethrow",
     "purescript-exists": "^3.0.0",
     "purescript-identity": "^3.0.0",
     "purescript-profunctor": "^3.0.0",
@@ -20,11 +21,13 @@
     "purescript-quickcheck": "^4.0.0",
     "purescript-transformers": "^3.1.0",
     "purescript-foldable-traversable": "^3.0.0",
-    "purescript-exceptions": "^3.0.0",
     "purescript-node-fs": "^4.0.0",
     "purescript-node-buffer": "^3.0.0",
     "purescript-node-readline": "^3.0.0",
     "purescript-datetime": "^3.0.0",
     "purescript-now": "^3.0.0"
+  },
+  "resolutions": {
+    "purescript-exceptions": "rethrow"
   }
 }
