@@ -28,7 +28,7 @@ import Control.Monad.State.Trans (StateT, evalStateT)
 import Control.Monad.State.Class (get, put)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Exception (EXCEPTION)
+import Control.Monad.Eff.Exception (EXCEPTION, rethrowException, error)
 import Control.Monad.Eff.Exception.Unsafe (unsafeThrow)
 import Control.Monad.Eff.Now (NOW)
 import Node.FS (FS)
@@ -170,10 +170,12 @@ runBenchmarkF benchmark onChange = do
   where
   withIndices arr = zip (1..(length arr)) arr
 
--- TODO: use purescript-exceptions instead. This appears to be blocked on:
---    https://github.com/purescript/purescript-exceptions/issues/5
-foreign import handleBenchmarkException ::
-  forall e a. String -> Int -> Eff (BenchEffects e) a -> Eff (BenchEffects e) a
+handleBenchmarkException :: forall e. String -> Int -> Eff (exception :: EXCEPTION | e) ~> Eff (exception :: EXCEPTION | e)
+handleBenchmarkException name size =
+  rethrowException \innerError -> error $
+    "While running Benchotron benchmark function: " <> name <> " " <>
+    "at n=" <> show size <> ":\n" <>
+    show innerError
 
 runBenchmarkFunction :: forall e a. Array a -> BenchmarkFunction a -> Eff (BenchEffects e) Stats
 runBenchmarkFunction inputs (BenchmarkFunction function') =
