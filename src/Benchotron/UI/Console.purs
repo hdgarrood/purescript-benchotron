@@ -11,8 +11,9 @@ import Data.Int (fromNumber)
 import Data.String (joinWith)
 import Data.JSDate as JSD
 import Data.DateTime.Instant as DDI
-import Test.QuickCheck (runSeed, randomSeed)
+import Test.QuickCheck (randomSeed)
 import Test.QuickCheck.Gen (GenState)
+import Random.LCG (unSeed)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.State.Class (get)
 import Effect (Effect)
@@ -85,7 +86,7 @@ showOptions = map (showOption <<< second getSlugAndTitle) <<< withIndices
 runBenchmarkConsole :: Benchmark -> BenchM BenchmarkResult
 runBenchmarkConsole benchmark = do
   state <- get
-  let seed = runSeed state.newSeed :: Int
+  let seed = unSeed state.newSeed :: Int
   lift $ do
     stderrWrite $ "### Benchmark: " <> unpackBenchmark _.title benchmark <> " ###\n"
     stderrWrite $ "Using seed: " <> show seed <> "\n"
