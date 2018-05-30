@@ -11,7 +11,6 @@ module Benchotron.Core
   , runBenchmarkF
   , BenchM
   , runBenchM
-  , BenchEffects
   , BenchmarkResult
   , ResultSeries
   , DataPoint
@@ -27,18 +26,12 @@ import Data.Unfoldable (replicateA)
 import Control.Monad.State.Trans (StateT, evalStateT)
 import Control.Monad.State.Class (get, put)
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Exception (EXCEPTION)
-import Control.Monad.Eff.Exception.Unsafe (unsafeThrow)
-import Control.Monad.Eff.Now (NOW)
-import Node.FS (FS)
-import Node.ReadLine (READLINE)
-import Control.Monad.Eff.Console (CONSOLE)
-import Control.Monad.Eff.Random  (RANDOM)
+import Effect (Effect)
+import Effect.Exception.Unsafe (unsafeThrow)
 import Partial.Unsafe (unsafePartial)
 import Test.QuickCheck.Gen (Gen, GenState, runGen)
 
-import Benchotron.BenchmarkJS (Stats, BENCHMARK, benchmarkJS, runBenchmarkImpl,
+import Benchotron.BenchmarkJS (Stats, benchmarkJS, runBenchmarkImpl,
                                monkeyPatchBenchmark)
 import Benchotron.Utils (Any, toAny)
 
@@ -98,7 +91,7 @@ newtype BenchmarkFunctionF a b = BenchmarkFunctionF
 -- | Create a `BenchmarkFunction`, given a name and a function to be
 -- | benchmarked.
 benchFn :: forall a r. String -> (a -> r) -> BenchmarkFunction a
-benchFn name fn = benchFn' name fn id
+benchFn name fn = benchFn' name fn identity
 
 -- | Create a `BenchmarkFunction`. Like `benchFn`, except that it accepts a
 -- | third argument which will be used to preprocess the input, before starting
@@ -115,36 +108,36 @@ getName (BenchmarkFunction f) = runExists go f
   go :: forall b. BenchmarkFunctionF a b -> String
   go (BenchmarkFunctionF o) = o.name
 
-type BenchM e a = StateT GenState (Eff (BenchEffects e)) a
+type BenchM a = StateT GenState Effect a
 
-runBenchM :: forall e a. BenchM e a -> GenState -> Eff (BenchEffects e) a
+runBenchM :: forall a. BenchM a -> GenState -> Effect a
 runBenchM = evalStateT
 
 -- | Use the given generator to generate a random value, using (and modifying)
 -- | the state of the BenchM computation.
-stepGen :: forall e a. Gen a -> BenchM e a
+stepGen :: forall a. Gen a -> BenchM a
 stepGen gen = do
   st <- get
   let out = runGen gen st
   put $ snd out
   pure $ fst out
 
-runBenchmark :: forall e.
+runBenchmark ::
   Benchmark ->
   -- ^ The Benchmark to be run.
-  (Int -> Int -> BenchM e Unit) ->
+  (Int -> Int -> BenchM Unit) ->
   -- ^ Callback for when the size changes; the arguments are current size index
   --   (1-based) , and the current size.
-  BenchM e BenchmarkResult
+  BenchM BenchmarkResult
 runBenchmark = unpackBenchmark runBenchmarkF
 
-runBenchmarkF :: forall e a.
+runBenchmarkF :: forall a.
   BenchmarkF a ->
   -- ^ The Benchmark to be run.
-  (Int -> Int -> BenchM e Unit) ->
+  (Int -> Int -> BenchM Unit) ->
   -- ^ Callback for when the size changes; the arguments are current size index
   --   (1-based) , and the current size.
-  BenchM e BenchmarkResult
+  BenchM BenchmarkResult
 runBenchmarkF benchmark onChange = do
   results <- for (withIndices benchmark.sizes) $ \(Tuple idx size) -> do
     onChange idx size
@@ -173,30 +166,19 @@ runBenchmarkF benchmark onChange = do
 -- TODO: use purescript-exceptions instead. This appears to be blocked on:
 --    https://github.com/purescript/purescript-exceptions/issues/5
 foreign import handleBenchmarkException ::
-  forall e a. String -> Int -> Eff (BenchEffects e) a -> Eff (BenchEffects e) a
+  forall a. String -> Int -> Effect a -> Effect a
 
-runBenchmarkFunction :: forall e a. Array a -> BenchmarkFunction a -> Eff (BenchEffects e) Stats
+runBenchmarkFunction :: forall a. Array a -> BenchmarkFunction a -> Effect Stats
 runBenchmarkFunction inputs (BenchmarkFunction function') =
   runExists go function'
   where
-  go :: forall b. BenchmarkFunctionF a b -> Eff (BenchEffects e) Stats
+  go :: forall b. BenchmarkFunctionF a b -> Effect Stats
   go (BenchmarkFunctionF function) =
     let inputs' = map function.before inputs
         f = \_ -> toAny $ map function.fn inputs'
     in do
       monkeyPatchBenchmark benchmarkJS
       runBenchmarkImpl benchmarkJS f
-
-type BenchEffects e
-  = ( exception :: EXCEPTION
-    , fs        :: FS
-    , now       :: NOW
-    , console   :: CONSOLE
-    , random    :: RANDOM
-    , benchmark :: BENCHMARK
-    , readline  :: READLINE
-    | e
-    )
 
 type BenchmarkResult =
   { slug               :: String

@@ -2,11 +2,10 @@
 module Benchotron.BenchmarkJS where
 
 import Prelude
-import Control.Monad.Eff (kind Effect, Eff)
+import Effect (Effect)
 import Benchotron.Utils (Any)
 
 foreign import data BenchmarkJS :: Type
-foreign import data BENCHMARK :: Effect
 
 type Stats =
   { deviation :: Number
@@ -29,7 +28,7 @@ foreign import benchmarkJS  :: BenchmarkJS
 -- | function decompilation is not supported, which should hopefully stop this
 -- | from happening.
 foreign import monkeyPatchBenchmark ::
-  forall e. BenchmarkJS -> Eff (benchmark :: BENCHMARK | e) Unit
+  BenchmarkJS -> Effect Unit
 
 foreign import runBenchmarkImpl ::
-  forall e. BenchmarkJS -> (Unit -> Any) -> Eff (benchmark :: BENCHMARK | e) Stats
+  BenchmarkJS -> (Unit -> Any) -> Effect Stats

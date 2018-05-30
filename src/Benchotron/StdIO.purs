@@ -7,23 +7,19 @@ module Benchotron.StdIO
 
 import Prelude
 import Data.String as S
-import Control.Monad.Eff.Console (CONSOLE)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Exception (EXCEPTION)
-import Node.ReadLine (Interface, READLINE, prompt, setPrompt, close,
+import Effect (Effect)
+import Node.ReadLine (Interface, prompt, setPrompt, close,
                       setLineHandler, noCompletion, createConsoleInterface)
 
-foreign import stdoutWrite ::
-  forall e. String -> Eff (console :: CONSOLE | e) Unit
+foreign import stdoutWrite :: String -> Effect Unit
 
-foreign import stderrWrite ::
-  forall e. String -> Eff (console :: CONSOLE | e) Unit
+foreign import stderrWrite :: String -> Effect Unit
 
-question :: forall e.
+question ::
   String ->
   (String ->
-   Eff (readline :: READLINE, console :: CONSOLE, exception :: EXCEPTION | e) Unit) ->
-  Eff (readline :: READLINE, console :: CONSOLE, exception :: EXCEPTION | e) Unit
+   Effect Unit) ->
+  Effect Unit
 question q callback = do
   i <- createConsoleInterface noCompletion
   setLineHandler i (\s -> close i >>= const (callback s))
@@ -32,4 +28,4 @@ question q callback = do
   pure unit
 
 foreign import closeInterface ::
-  forall e. Interface -> Eff (console :: CONSOLE | e) Unit
+  Interface -> Effect Unit
