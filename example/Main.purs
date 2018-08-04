@@ -1,7 +1,7 @@
 module Main where
 
 import Prelude
-import Control.Monad.Eff (Eff)
+import Effect (Effect)
 import Data.Array ((..))
 import Data.Foldable (foldMap, foldr)
 import Data.Monoid.Additive (Additive(..))
@@ -9,7 +9,7 @@ import Data.Monoid.Multiplicative (Multiplicative(..))
 import Data.Newtype (ala)
 import Test.QuickCheck.Arbitrary (arbitrary)
 import Test.QuickCheck.Gen (vectorOf)
-import Benchotron.Core (Benchmark, BenchEffects, benchFn, mkBenchmark)
+import Benchotron.Core (Benchmark, benchFn, mkBenchmark)
 import Benchotron.UI.Console (runSuite)
 
 benchSum :: Benchmark
@@ -37,5 +37,5 @@ benchProduct = mkBenchmark
                , benchFn "foldMap" (ala Multiplicative foldMap)
                ]
   }
-main :: forall eff. Eff (BenchEffects eff) Unit
+main :: Effect Unit
 main = runSuite [benchSum, benchProduct]

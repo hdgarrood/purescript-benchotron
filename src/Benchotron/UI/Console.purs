@@ -11,19 +11,19 @@ import Data.Int (fromNumber)
 import Data.String (joinWith)
 import Data.JSDate as JSD
 import Data.DateTime.Instant as DDI
+import Test.QuickCheck (randomSeed)
 import Test.QuickCheck.Gen (GenState)
-import Test.QuickCheck.LCG (runSeed, randomSeed)
+import Random.LCG (unSeed)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.State.Class (get)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Now (now)
-import Control.Monad.Eff.Random (RANDOM)
+import Effect (Effect)
+import Effect.Now (now)
 import Node.FS.Sync (writeTextFile, mkdir, stat, exists)
 import Node.FS.Stats (isDirectory)
 import Node.Encoding (Encoding(..))
 import Global (readInt)
 
-import Benchotron.Core (BenchmarkResult, BenchEffects, Benchmark, BenchM,
+import Benchotron.Core (BenchmarkResult, Benchmark, BenchM,
                         runBenchM, runBenchmark, unpackBenchmark)
 import Benchotron.StdIO (stdoutWrite, stderrWrite, question)
 import Benchotron.Utils (unsafeJsonStringify)
@@ -37,7 +37,7 @@ parseAnswer x = let y = fromNumber $ readInt 10 x
 
 -- | TODO: Only fetch one seed from global random generator, have this return
 -- | BenchM instead?
-runSuite :: forall e. Array Benchmark -> Eff (BenchEffects e) Unit
+runSuite :: Array Benchmark -> Effect Unit
 runSuite bs = do
   case bs of
     []  -> stdoutWrite "Empty suite; nothing to do.\n"
@@ -83,10 +83,10 @@ showOptions = map (showOption <<< second getSlugAndTitle) <<< withIndices
   withIndices arr =
     A.zip (A.range 1 (A.length arr)) arr
 
-runBenchmarkConsole :: forall e. Benchmark -> BenchM e BenchmarkResult
+runBenchmarkConsole :: Benchmark -> BenchM BenchmarkResult
 runBenchmarkConsole benchmark = do
   state <- get
-  let seed = runSeed state.newSeed :: Int
+  let seed = unSeed state.newSeed :: Int
   lift $ do
     stderrWrite $ "### Benchmark: " <> unpackBenchmark _.title benchmark <> " ###\n"
     stderrWrite $ "Using seed: " <> show seed <> "\n"
@@ -113,16 +113,16 @@ runBenchmarkConsole benchmark = do
       , ")"
       ]
 
-getInitialState :: forall e. Eff (random :: RANDOM | e) GenState
+getInitialState :: Effect GenState
 getInitialState = { newSeed: _, size: 10 } <$> randomSeed
 
-runBenchM' :: forall e a. BenchM e a -> Eff (BenchEffects e) a
+runBenchM' :: forall a. BenchM a -> Effect a
 runBenchM' action =
   getInitialState >>= runBenchM action
 
 -- | Run a benchmark and print the results to a file. This will only work on
 -- | node.js.
-benchmarkToFile :: forall e. Benchmark -> String -> Eff (BenchEffects e) Unit
+benchmarkToFile :: Benchmark -> String -> Effect Unit
 benchmarkToFile bench path = do
   results <- runBenchM' $ runBenchmarkConsole bench
   writeTextFile UTF8 path $ stringifyResult results
@@ -130,7 +130,7 @@ benchmarkToFile bench path = do
 
 -- | Run a benchmark and print the results to standard output. This will only
 -- | work on node.js.
-benchmarkToStdout :: forall e. Benchmark -> Eff (BenchEffects e) Unit
+benchmarkToStdout :: Benchmark -> Effect Unit
 benchmarkToStdout bench = do
   results <- runBenchM' $ runBenchmarkConsole bench
   stdoutWrite $ stringifyResult results
