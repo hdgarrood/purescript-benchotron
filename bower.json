@@ -17,7 +17,7 @@
     "purescript-identity": "^4.0.0",
     "purescript-profunctor": "^4.0.0",
     "purescript-strings": "^4.0.0",
-    "purescript-quickcheck": "^5.0.0",
+    "purescript-quickcheck": ">=5.0.0 <7.0.0",
     "purescript-lcg": "^2.0.0",
     "purescript-transformers": "^4.0.0",
     "purescript-foldable-traversable": "^4.0.0",
