@@ -100,7 +100,7 @@ runBenchmarkConsole benchmark = do
   noteTime f = nowString >>= (stderrWrite <<< f)
   nowString = (JSD.toTimeString<<<JSD.fromDateTime<<<DDI.toDateTime) <$> now
   countSizes = A.length $ unpackBenchmark _.sizes benchmark
-  clearLine = "\r\ESC[K"
+  clearLine = "\r\x1b[K"
   progress idx size =
     lift $ stderrWrite $ joinWith ""
       [ clearLine
