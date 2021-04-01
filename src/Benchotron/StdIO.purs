@@ -6,7 +6,6 @@ module Benchotron.StdIO
   ) where
 
 import Prelude
-import Data.String as S
 import Effect (Effect)
 import Node.ReadLine (Interface, prompt, setPrompt, close,
                       setLineHandler, noCompletion, createConsoleInterface)
@@ -22,8 +21,8 @@ question ::
   Effect Unit
 question q callback = do
   i <- createConsoleInterface noCompletion
-  setLineHandler i (\s -> close i >>= const (callback s))
-  setPrompt q (S.length q) i
+  setLineHandler (\s -> close i >>= const (callback s)) i
+  setPrompt q i
   prompt i
   pure unit
 

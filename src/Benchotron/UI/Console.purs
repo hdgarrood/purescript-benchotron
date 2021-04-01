@@ -3,6 +3,7 @@ module Benchotron.UI.Console where
 
 import Prelude
 import Data.Tuple (Tuple(..))
+import Data.Number as N
 import Data.Maybe (Maybe(..))
 import Data.Foldable (traverse_)
 import Data.Profunctor.Strong (second, (&&&))
@@ -21,7 +22,6 @@ import Effect.Now (now)
 import Node.FS.Sync (writeTextFile, mkdir, stat, exists)
 import Node.FS.Stats (isDirectory)
 import Node.Encoding (Encoding(..))
-import Global (readInt)
 
 import Benchotron.Core (BenchmarkResult, Benchmark, BenchM,
                         runBenchM, runBenchmark, unpackBenchmark)
@@ -32,7 +32,7 @@ data Answer = All | One Int
 
 parseAnswer :: String -> Maybe Answer
 parseAnswer "*" = Just All
-parseAnswer x = let y = fromNumber $ readInt 10 x
+parseAnswer x = let y = N.fromString x >>= fromNumber
                 in  map One y
 
 -- | TODO: Only fetch one seed from global random generator, have this return
