@@ -4,3 +4,4 @@ node_modules/
 tmp/
 .psci
 .psci_modules/
+.spago

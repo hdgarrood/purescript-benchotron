@@ -12,20 +12,23 @@
     "url": "git://github.com/hdgarrood/purescript-benchotron.git"
   },
   "dependencies": {
-    "purescript-arrays": "^v5.0.0",
-    "purescript-exists": "v4.0.0",
-    "purescript-identity": "^4.0.0",
-    "purescript-profunctor": "^4.0.0",
-    "purescript-strings": "^4.0.0",
-    "purescript-quickcheck": ">=5.0.0 <7.0.0",
-    "purescript-lcg": "^2.0.0",
-    "purescript-transformers": "^4.0.0",
-    "purescript-foldable-traversable": "^4.0.0",
-    "purescript-exceptions": "^4.0.0",
-    "purescript-node-fs": "^5.0.0",
-    "purescript-node-buffer": "^5.0.0",
-    "purescript-node-readline": "^4.0.0",
-    "purescript-datetime": "^4.0.0",
-    "purescript-now": "^4.0.0"
+    "purescript-arrays": "^6.0.0",
+    "purescript-console": "^5.0.0",
+    "purescript-datetime": "^5.0.0",
+    "purescript-effect": "^3.0.0",
+    "purescript-exceptions": "^5.0.0",
+    "purescript-exists": "^5.0.0",
+    "purescript-foldable-traversable": "^5.0.0",
+    "purescript-identity": "^5.0.0",
+    "purescript-lcg": "^3.0.0",
+    "purescript-node-fs": "^6.0.0",
+    "purescript-node-readline": "^5.0.0",
+    "purescript-now": "^5.0.0",
+    "purescript-numbers": "^8.0.0",
+    "purescript-profunctor": "^5.0.0",
+    "purescript-psci-support": "^5.0.0",
+    "purescript-quickcheck": "^7.0.0",
+    "purescript-strings": "^5.0.0",
+    "purescript-transformers": "^5.0.0"
   }
 }
