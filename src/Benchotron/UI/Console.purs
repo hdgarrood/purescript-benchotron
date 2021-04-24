@@ -3,12 +3,11 @@ module Benchotron.UI.Console where
 
 import Prelude
 import Data.Tuple (Tuple(..))
-import Data.Number as N
 import Data.Maybe (Maybe(..))
 import Data.Foldable (traverse_)
 import Data.Profunctor.Strong (second, (&&&))
 import Data.Array as A
-import Data.Int (fromNumber)
+import Data.Int as Int
 import Data.String (joinWith)
 import Data.JSDate as JSD
 import Data.DateTime.Instant as DDI
@@ -32,7 +31,7 @@ data Answer = All | One Int
 
 parseAnswer :: String -> Maybe Answer
 parseAnswer "*" = Just All
-parseAnswer x = let y = N.fromString x >>= fromNumber
+parseAnswer x = let y = Int.fromString x
                 in  map One y
 
 -- | TODO: Only fetch one seed from global random generator, have this return
