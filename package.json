@@ -3,7 +3,7 @@
   "dependencies": {
     "benchmark": "^2.1.0",
     "microtime": "^3.0.0",
-    "pulp": "^12.0.0"
+    "pulp": "^15.0.0"
   },
   "scripts": {
     "postinstall": "bower install",
