@@ -7,8 +7,9 @@ module Benchotron.StdIO
 
 import Prelude
 import Effect (Effect)
+import Node.EventEmitter (on_)
 import Node.ReadLine (Interface, prompt, setPrompt, close,
-                      setLineHandler, noCompletion, createConsoleInterface)
+                      lineH, noCompletion, createConsoleInterface)
 
 foreign import stdoutWrite :: String -> Effect Unit
 
@@ -21,10 +22,11 @@ question ::
   Effect Unit
 question q callback = do
   i <- createConsoleInterface noCompletion
-  setLineHandler (\s -> close i >>= const (callback s)) i
   setPrompt q i
   prompt i
-  pure unit
+  i # on_ lineH \s -> do
+    close i
+    callback s
 
 foreign import closeInterface ::
   Interface -> Effect Unit

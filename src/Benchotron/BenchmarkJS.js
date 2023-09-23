@@ -2,15 +2,17 @@
 /* global require */
 "use strict";
 
-exports.benchmarkJS = require('benchmark');
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+export const benchmarkJS = require('benchmark');
 
-exports.monkeyPatchBenchmark = function (b) {
+export const monkeyPatchBenchmark = function (b) {
   return function () {
     b.support.decompilation = false;
   };
 };
 
-exports.runBenchmarkImpl = function (Benchmark) {
+export const runBenchmarkImpl = function (Benchmark) {
   return function (fn) {
     return function () {
       var b = new Benchmark(fn);
