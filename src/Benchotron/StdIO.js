@@ -2,19 +2,19 @@
 /* global process */
 "use strict";
 
-exports.stdoutWrite = function (str) {
+export const stdoutWrite = function (str) {
   return function () {
     process.stdout.write(str);
   };
 };
 
-exports.stderrWrite = function (str) {
+export const stderrWrite = function (str) {
   return function () {
     process.stderr.write(str);
   };
 };
 
-exports.closeInterface = function (i) {
+export const closeInterface = function (i) {
   return function() {
     i.close();
   };

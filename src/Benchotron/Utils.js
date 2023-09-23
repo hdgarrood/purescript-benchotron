@@ -1,4 +1,4 @@
 /* global exports */
 "use strict";
 
-exports.unsafeJsonStringify = JSON.stringify;
+export const unsafeJsonStringify = JSON.stringify;

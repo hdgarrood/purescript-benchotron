@@ -1,7 +1,7 @@
 /* global exports */
 "use strict";
 
-exports.handleBenchmarkException = function (name) {
+export const handleBenchmarkException = function (name) {
   return function (size) {
     return function (innerAction) {
       return function () {
